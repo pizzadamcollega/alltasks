@@ -16,10 +16,10 @@ list are in **`docs/PANEL-FEATURE-PLAN.md` — read that file second, right afte
   Çalışanlar/ücret/ödeme), plus a simple weekly shift board (`/program`, D-36) and hand-entered
   hours (D-37). **There is no Başla/Bitir timer any more (D-38)** — the SPEC/SCREENS clock-in text
   is superseded. Phase 6's request/draft/publish flow, swaps, leave, notifications,
-  Raporlar/export, Ayarlar and PWA are **not built**. See PANEL-FEATURE-PLAN §8 for what's still
-  unapplied (migration 20261026000003).
-- **Supabase**: real project `fgpjzqybsijlasuoklen` (ap-northeast-2), both migrations + seed
-  applied. Staff e-mail domain `staff.pizzadam.invalid` confirmed working (D-28). Live accounts
+  Raporlar/export, Ayarlar and PWA are **not built**. See PANEL-FEATURE-PLAN §8.
+- **Supabase**: real project `sfpjvslasvzigpyfftyf` (**eu-central-1**, Frankfurt — moved from
+  Seoul `fgpjzqybsijlasuoklen` on 2026-10-26, D-40), all 3 migrations + seed applied, linked locally
+  (`supabase link`). Vercel functions pinned to `fra1` (`vercel.json`). Staff e-mail domain `staff.pizzadam.invalid` confirmed working (D-28). Live accounts
   (2026-10-26, D-33..D-35): admin `furkan`; yöneticiler `yonetici.pijp` / `yonetici.zuid`; test
   çalışanlar `test.ahmet` / `test.murat`. Passwords live **only** in the owner's local `.env.local`
   (`LOGIN_*` vars, gitignored + `.vercelignore`d) — never write them into the repo. The original

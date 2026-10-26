@@ -98,7 +98,7 @@ export function WeekCalendar({
               aria-current={state === "today" ? "date" : undefined}
               className={cn("flex flex-col gap-2 rounded-card border p-3 lg:min-h-40", DAY_CLASSES[state])}
             >
-              <div className="flex items-start justify-between gap-2">
+              <div className="flex flex-wrap items-start justify-between gap-x-2 gap-y-1 lg:flex-col lg:justify-start">
                 <div className="flex flex-col">
                   <span className="text-sm font-bold text-pz-text">{weekdayName(day.date)}</span>
                   <span className="text-xs tabular-nums text-pz-muted">{formatDayShortTR(day.date)}</span>
@@ -128,7 +128,14 @@ export function WeekCalendar({
                   {day.shifts.map((shift) => {
                     const isMe = shift.userId === currentUserId;
                     return (
-                      <li key={shift.id} className="flex items-center gap-2 text-sm">
+                      <li
+                        key={shift.id}
+                        className={cn(
+                          "flex items-center gap-2 text-sm",
+                          // 7 narrow columns on desktop: time above the name so names never truncate
+                          !editor && "lg:flex-col lg:items-start lg:gap-0",
+                        )}
+                      >
                         <span
                           className={cn(
                             "w-11 shrink-0 font-bold tabular-nums",
@@ -139,7 +146,7 @@ export function WeekCalendar({
                         </span>
                         <span
                           className={cn(
-                            "min-w-0 truncate",
+                            "min-w-0 truncate lg:whitespace-normal lg:break-words",
                             isMe ? "font-bold text-pz-accent" : state === "past" ? "text-pz-muted" : "text-pz-text",
                           )}
                         >

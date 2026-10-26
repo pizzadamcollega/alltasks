@@ -9,7 +9,7 @@ ARCHITECTURE/DESIGN, it records the decisions and status specific to this featur
 
 | What | Where |
 | --- | --- |
-| Supabase project | `fgpjzqybsijlasuoklen`, region ap-northeast-2. Migrations + `seed.sql` applied. |
+| Supabase project | `sfpjvslasvzigpyfftyf`, region **eu-central-1** (Frankfurt). All migrations + `seed.sql` applied. Old Seoul project `fgpjzqybsijlasuoklen` is no longer used (D-40). |
 | DB connection (local/CI only) | Session pooler, `.env.local`'s `SUPABASE_DB_URL` (D-29) — never set this on Vercel. |
 | GitHub | `https://github.com/pizzadamcollega/alltasks.git`, branch `main`, pushed. |
 | Vercel | `https://alltasks-mauve.vercel.app` — deployed, **login confirmed working end-to-end**. |
@@ -162,8 +162,10 @@ migration exactly; nothing here is enforced only in the UI (CLAUDE.md golden rul
 - **Elle saat girişi** replaces Başla/Bitir (D-37/D-38): form "Çalıştığım saatler" on the employee
   home (Tarih / Başlangıç / Bitiş, duration preview, past-midnight handled). Entries are approved
   at once and tagged "Elle girildi" everywhere (Geçmiş, Onay, home).
-- Migration `20261026000003_shifts_manual_entries.sql` — **written, NOT yet applied** to any
-  database (applying it to prod needs the owner's go-ahead; see D-39 region move).
+- Migration `20261026000003_shifts_manual_entries.sql` applied to the Frankfurt project; its rules
+  were checked against the live DB (manual → approved+manual, overlap / future / >31 days / no-end
+  refused, `clock_in` 42501, shifts writable only by own-branch yönetici, readable per branch).
 - Patron home: "Bugün" stat is now "saat girdi / programda".
-- Speed: `getClaims` instead of `getUser`, parallel session reads (D-39). Region move pending.
+- Speed: `getClaims` instead of `getUser`, parallel session reads (D-39), DB + functions moved to
+  Frankfurt (D-40). Measured on prod after the move: authenticated pages 0.25–0.45 s.
 - `tests/e2e/clock.spec.ts` replaced by `manual-entry.spec.ts` (still not runnable here — no Docker).
