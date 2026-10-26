@@ -1,0 +1,18 @@
+import { chromium } from "playwright";
+
+const BASE = "https://alltasks-mauve.vercel.app";
+const browser = await chromium.launch();
+const page = await browser.newPage();
+
+await page.goto(`${BASE}/de-pijp/giris`, { waitUntil: "networkidle" });
+await page.getByLabel("Kullanıcı adı").fill("admin");
+await page.locator("#password").fill("Pizza2026Admin!");
+await page.getByRole("button", { name: "Giriş yap" }).click();
+await page.waitForTimeout(3000);
+await page.waitForLoadState("networkidle");
+
+console.log("URL after login:", page.url());
+console.log("Full body text:", (await page.locator("main").innerText().catch(() => page.locator("body").innerText())));
+
+await page.screenshot({ path: "tests/manual/shots/prod-after-login.png", fullPage: true });
+await browser.close();

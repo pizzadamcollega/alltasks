@@ -7,6 +7,34 @@ payments/advances, monthly reports with Excel/PDF export.
 
 **UI language is Turkish only.** Code, comments, commit messages and docs are English.
 
+## Current status (2026-10-27) — read this before doing anything
+
+The app is **built and live**, not just specced. Full detail, scope decisions and the open-item
+list are in **`docs/PANEL-FEATURE-PLAN.md` — read that file second, right after this one.**
+
+- **Code**: ROADMAP Phase 0–5 implemented (scaffold, auth, employee home/Geçmiş, manager Onay,
+  Çalışanlar/ücret/ödeme). Phase 6–11 (Program, swaps, leave, notifications, Raporlar/export,
+  Ayarlar, PWA) are **not built yet**.
+- **Supabase**: real project `fgpjzqybsijlasuoklen` (ap-northeast-2), both migrations + seed
+  applied. Staff e-mail domain `staff.pizzadam.invalid` confirmed working (D-28). An admin account
+  exists: username `admin`, password `Pizza2026Admin!` — **change this password** once someone is
+  actually using it.
+- **GitHub**: pushed to `https://github.com/pizzadamcollega/alltasks.git`, branch `main`.
+- **Vercel**: deployed at `https://alltasks-mauve.vercel.app`. ⚠️ **Known broken**: login fails
+  there with "Sunucu yapılandırması eksik" — `STAFF_EMAIL_DOMAIN` (and possibly
+  `SUPABASE_SERVICE_ROLE_KEY` / `APP_BASE_URL`) are missing from the Vercel project's environment
+  variables. Fix in Vercel dashboard → Settings → Environment Variables, using the values from the
+  local `.env.local` (not committed), then redeploy. Verify with
+  `node tests/manual/prod-login-check.mjs` (edit the `BASE` URL/credentials at the top first).
+- **Not runnable here**: this environment has no Docker, so `npm run test:db`,
+  `npm run db:seed-users` + `npm run test:e2e`, and a real `npm run db:types` have never actually
+  executed — only lint/typecheck/unit-test/build were verified. `SUPABASE_DB_URL` (session-pooler
+  form, D-29) is in `.env.local` and works for one-off `supabase db push --db-url ...` calls, which
+  don't need Docker.
+- **Known real gaps** (not just unverified — actually not implemented): no multi-branch picker for
+  admin when creating an employee; edited-entry audit original-value isn't shown in the UI; no
+  `/dev/ui` component showcase. Full list in `docs/PANEL-FEATURE-PLAN.md` §6.
+
 ## Read first
 
 | File | What it holds |
@@ -18,6 +46,7 @@ payments/advances, monthly reports with Excel/PDF export.
 | `docs/ROADMAP.md` | Phased build plan with acceptance criteria. **Work phase by phase.** |
 | `docs/TEST-PLAN.md` | DB, unit, e2e and accessibility tests to write and keep green. |
 | `docs/DECISIONS.md` | Decision log — why things are the way they are. Append when you decide something. |
+| `docs/PANEL-FEATURE-PLAN.md` | **Read this right after this file.** Build status, scope cuts, the ücret/mesai permission matrix, live infra (Supabase/GitHub/Vercel), and the honest open-items list. |
 | `supabase/migrations/*.sql` | The schema, RLS, triggers and RPCs. Already written and tested. |
 
 ## Golden rules

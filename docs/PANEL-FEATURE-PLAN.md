@@ -5,6 +5,23 @@ panel) actually is in this codebase, the scope cut agreed with the owner, and wh
 still open. Read this alongside `CLAUDE.md` (read-first order) — it does not repeat SPEC/SCREENS/
 ARCHITECTURE/DESIGN, it records the decisions and status specific to this feature round.
 
+## 0. Live infrastructure (as of 2026-10-27)
+
+| What | Where |
+| --- | --- |
+| Supabase project | `fgpjzqybsijlasuoklen`, region ap-northeast-2. Migrations + `seed.sql` applied. |
+| DB connection (local/CI only) | Session pooler, `.env.local`'s `SUPABASE_DB_URL` (D-29) — never set this on Vercel. |
+| GitHub | `https://github.com/pizzadamcollega/alltasks.git`, branch `main`, pushed. |
+| Vercel | `https://alltasks-mauve.vercel.app` — deployed, but **login is broken** there (see below). |
+| First admin account | username `admin`, password `Pizza2026Admin!` (change it once someone real uses it). |
+
+**Vercel env vars still needed** (Settings → Environment Variables, then redeploy): `STAFF_EMAIL_DOMAIN`,
+`SUPABASE_SERVICE_ROLE_KEY`, `APP_BASE_URL` — same values as `.env.local`. Confirmed missing by
+hitting the live login form and getting "Sunucu yapılandırması eksik" (that string only appears
+when `STAFF_EMAIL_DOMAIN` is unset — see `app/[branch]/giris/actions.ts`). Re-test with
+`node tests/manual/prod-login-check.mjs` after fixing (edit the hardcoded `BASE` URL and
+credentials at the top of that file if they've changed).
+
 ## 1. Framing
 
 The "panel" was not a greenfield feature: SPEC §4–§6, SCREENS S2/S5/S8/S9/S12–S14 and the whole DB
@@ -90,11 +107,16 @@ migration exactly; nothing here is enforced only in the UI (CLAUDE.md golden rul
 4. **Run the DB smoke tests** (`npm run test:db`, needs a local Postgres — not available here)
    and the **Playwright suite** (`supabase start && npm run db:seed-users && npm run test:e2e`,
    needs the local Supabase stack, i.e. Docker) — both still pending a machine with Docker.
-5. **Git**: push this repo to `https://github.com/pizzadamcollega/alltasks.git` (in progress).
-6. **Vercel project**: import the repo, set the same env vars as `.env.local`
-   (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`,
-   `STAFF_EMAIL_DOMAIN`, `APP_BASE_URL`) — **not** `SUPABASE_DB_URL` (local/CI only, never needed
-   at runtime) — Pro plan for production (D-11).
+5. ~~Git: push this repo~~ **Done 2026-10-27**: `https://github.com/pizzadamcollega/alltasks.git`, `main`.
+6. ~~Vercel project: import the repo~~ **Done 2026-10-27**, but incomplete:
+   `https://alltasks-mauve.vercel.app` is live, `NEXT_PUBLIC_SUPABASE_URL` /
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY` are clearly set (the login *page* renders), but
+   `STAFF_EMAIL_DOMAIN` (at least) is missing — login fails with "Sunucu yapılandırması eksik".
+   **Next action**: add `STAFF_EMAIL_DOMAIN`, `SUPABASE_SERVICE_ROLE_KEY`, `APP_BASE_URL` in
+   Vercel → Settings → Environment Variables (same values as `.env.local`), redeploy, re-test with
+   `node tests/manual/prod-login-check.mjs`. **Never** add `SUPABASE_DB_URL` there — it's
+   local/CI-only (D-29). Still on Hobby plan as of this writing — move to Pro before real traffic
+   (D-11; Hobby is non-commercial-use only).
 7. Once the above are green, resume at ROADMAP Phase 6 (haftalık program) if/when the owner wants
    the rest of the ERP built.
 
