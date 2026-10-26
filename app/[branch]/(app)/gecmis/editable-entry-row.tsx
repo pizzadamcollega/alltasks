@@ -5,7 +5,7 @@ import { EntryRow } from "@/components/app/entry-row";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { formatDayTR, formatDuration, formatTimeTR } from "@/lib/time";
 import { formatEUR } from "@/lib/money";
-import { entryStatusLabel, entryStatusTone } from "@/features/entries/status";
+import { entryEditedNote, entryStatusLabel, entryStatusTone } from "@/features/entries/status";
 import type { EntrySummary } from "@/features/entries/queries";
 import { EditEntryForm } from "./edit-entry-form";
 
@@ -27,9 +27,7 @@ export function EditableEntryRow({
       duration={entry.roundedMinutes != null ? formatDuration(entry.roundedMinutes) : "Devam ediyor"}
       amount={entry.amount != null ? formatEUR(entry.amount) : undefined}
       status={{ label: entryStatusLabel(entry.status), tone: entryStatusTone(entry.status) }}
-      editedNote={
-        entry.editedByEmployee ? "Düzenlendi" : entry.editedByManager ? "Patron düzenledi" : undefined
-      }
+      editedNote={entryEditedNote(entry)}
       onClick={editable ? () => setOpen(true) : undefined}
     />
   );

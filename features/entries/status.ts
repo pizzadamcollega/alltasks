@@ -21,3 +21,15 @@ export function entryStatusLabel(status: EntryStatus): string {
 export function entryStatusTone(status: EntryStatus): StatusTone {
   return TONES[status];
 }
+
+/** Caption under an entry: hand-entered beats edited, since a manual entry is never timer-based. */
+export function entryEditedNote(entry: {
+  manual: boolean;
+  editedByEmployee: boolean;
+  editedByManager: boolean;
+}): string | undefined {
+  if (entry.manual) return "Elle girildi";
+  if (entry.editedByEmployee) return "Düzenlendi";
+  if (entry.editedByManager) return "Patron düzenledi";
+  return undefined;
+}

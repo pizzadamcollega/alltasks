@@ -1,5 +1,5 @@
 /**
- * Hand-authored from supabase/migrations/20261025000001_init.sql, covering only
+ * Hand-authored from supabase/migrations/*.sql (init + 20261026000003 shifts/manual), covering only
  * the tables/views/functions this phase's screens touch (S1/S2/S5/S6/S8/S9/S12-14).
  * `Relationships: []` is required boilerplate so these tables structurally
  * match postgrest-js's `GenericTable`/`GenericView` (real codegen always
@@ -95,6 +95,7 @@ export interface Database {
           edited_by_manager: boolean;
           approved_by: string | null;
           approved_at: string | null;
+          manual: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -103,6 +104,27 @@ export interface Database {
           branch_id: string;
         };
         Update: Partial<Database["public"]["Tables"]["time_entries"]["Row"]>;
+        Relationships: [];
+      };
+      shifts: {
+        Row: {
+          id: string;
+          branch_id: string;
+          user_id: string;
+          work_date: string;
+          start_time: string;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          branch_id: string;
+          user_id: string;
+          work_date: string;
+          start_time: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["shifts"]["Row"]>;
         Relationships: [];
       };
       payments: {
@@ -147,6 +169,7 @@ export interface Database {
           approved_at: string | null;
           hourly_rate: number | null;
           amount: number | null;
+          manual: boolean;
         };
         Relationships: [];
       };

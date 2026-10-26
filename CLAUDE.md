@@ -13,8 +13,11 @@ The app is **built and live**, not just specced. Full detail, scope decisions an
 list are in **`docs/PANEL-FEATURE-PLAN.md` — read that file second, right after this one.**
 
 - **Code**: ROADMAP Phase 0–5 implemented (scaffold, auth, employee home/Geçmiş, manager Onay,
-  Çalışanlar/ücret/ödeme). Phase 6–11 (Program, swaps, leave, notifications, Raporlar/export,
-  Ayarlar, PWA) are **not built yet**.
+  Çalışanlar/ücret/ödeme), plus a simple weekly shift board (`/program`, D-36) and hand-entered
+  hours (D-37). **There is no Başla/Bitir timer any more (D-38)** — the SPEC/SCREENS clock-in text
+  is superseded. Phase 6's request/draft/publish flow, swaps, leave, notifications,
+  Raporlar/export, Ayarlar and PWA are **not built**. See PANEL-FEATURE-PLAN §8 for what's still
+  unapplied (migration 20261026000003).
 - **Supabase**: real project `fgpjzqybsijlasuoklen` (ap-northeast-2), both migrations + seed
   applied. Staff e-mail domain `staff.pizzadam.invalid` confirmed working (D-28). Live accounts
   (2026-10-26, D-33..D-35): admin `furkan`; yöneticiler `yonetici.pijp` / `yonetici.zuid`; test

@@ -1,31 +1,40 @@
+import Link from "next/link";
 import { addDays, format } from "date-fns";
-import { Users } from "lucide-react";
+import { CalendarDays, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { formatDayTR, formatDuration, formatTimeTR, minutesSince, monthStart, todayInAmsterdam, TR_MONTHS } from "@/lib/time";
+import { formatDayTR, formatDuration, formatTimeTR, minutesSince, monthStart, todayInAmsterdam, weekFromParam, weekStart, TR_MONTHS } from "@/lib/time";
 import { formatEUR } from "@/lib/money";
 import { getDailyBranchCost, getMonthlyBranchCost, getTodayStaff } from "@/features/branch/queries";
 import { entryStatusLabel, entryStatusTone } from "@/features/entries/status";
+import { getWeekShifts } from "@/features/shifts/queries";
 import { StatCard, StatGrid } from "@/components/app/stat-card";
+import { WeekCalendar } from "@/components/app/week-calendar";
 import { EntryRow } from "@/components/app/entry-row";
 import { EmptyState } from "@/components/app/empty-state";
 import type { SessionContext } from "@/lib/session";
 
-export async function PatronHome({ session }: { session: SessionContext }) {
+export async function PatronHome({ session, hafta }: { session: SessionContext; hafta?: string }) {
   const supabase = await createClient();
   const { branch } = session;
 
   const today = todayInAmsterdam();
   const yesterday = format(addDays(new Date(`${today}T12:00:00Z`), -1), "yyyy-MM-dd");
   const monthStartStr = monthStart(today);
+  const calendarMonday = weekFromParam(hafta, today);
 
-  const [monthCost, yesterdayCost, staff] = await Promise.all([
+  const [monthCost, yesterdayCost, staff, shiftDays] = await Promise.all([
     getMonthlyBranchCost(supabase, branch.id, monthStartStr),
     getDailyBranchCost(supabase, branch.id, yesterday),
     getTodayStaff(supabase, branch.id, today),
+    getWeekShifts(supabase, branch.id, calendarMonday),
   ]);
 
   const monthLabel = TR_MONTHS[Number(today.slice(5, 7)) - 1];
-  const workingNow = staff.filter((s) => s.status === "open").length;
+  // "Bugün" = who is on today's program vs. who has already entered hours today
+  const currentMonday = weekStart(today);
+  const currentWeek =
+    calendarMonday === currentMonday ? shiftDays : await getWeekShifts(supabase, branch.id, currentMonday);
+  const plannedToday = currentWeek.find((day) => day.date === today)?.shifts.length ?? 0;
 
   return (
     <div className="flex flex-col gap-4 pt-2 pb-6">
@@ -53,14 +62,14 @@ export async function PatronHome({ session }: { session: SessionContext }) {
                 : `${yesterdayCost.people} kişi`
             }
           />
-          <StatCard label="Bugün" value={`${workingNow} / ${staff.length}`} sub="mesaide / toplam" />
+          <StatCard label="Bugün" value={`${staff.length} / ${plannedToday}`} sub="saat girdi / programda" />
         </StatGrid>
       </section>
 
       <section aria-label="Bugün çalışanlar" className="flex flex-col gap-1">
         <h2 className="text-base font-bold text-pz-text">Bugün çalışanlar</h2>
         {staff.length === 0 ? (
-          <EmptyState icon={Users} title="Bugün henüz kimse mesaide değil" />
+          <EmptyState icon={Users} title="Bugün henüz kimse saat girmedi" />
         ) : (
           <div className="divide-y divide-pz-border rounded-card border border-pz-border bg-pz-surface px-3">
             {staff.map((person) => {
@@ -90,6 +99,22 @@ export async function PatronHome({ session }: { session: SessionContext }) {
           </div>
         )}
       </section>
+
+      <WeekCalendar
+        days={shiftDays}
+        today={today}
+        monday={calendarMonday}
+        basePath={`/${branch.slug}`}
+        actions={
+          <Link
+            href={`/${branch.slug}/program${hafta ? `?hafta=${calendarMonday}` : ""}`}
+            className="flex h-11 items-center gap-2 self-start rounded-xl bg-pz-accent-soft px-3 text-sm font-semibold text-pz-accent"
+          >
+            <CalendarDays className="size-4" aria-hidden />
+            Programı düzenle
+          </Link>
+        }
+      />
     </div>
   );
 }

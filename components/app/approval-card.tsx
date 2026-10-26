@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { StatusChip } from "@/components/app/status-chip";
 import { amsterdamLocalToISO, formatDuration, formatTimeTR, isoToAmsterdamLocalInput } from "@/lib/time";
 import { formatEUR } from "@/lib/money";
-import { entryStatusLabel, entryStatusTone } from "@/features/entries/status";
+import { entryStatusLabel, entryStatusTone, entryEditedNote } from "@/features/entries/status";
 import { approveEntriesAction, deleteEntryAction, managerUpdateEntryAction } from "@/features/entries/actions";
 import type { ManagerEntryRow } from "@/features/entries/queries";
 
@@ -98,10 +98,10 @@ export function ApprovalCard({
           <span className="text-sm tabular-nums text-pz-muted">
             {entry.roundedMinutes != null ? formatDuration(entry.roundedMinutes) : "Bitirilmedi"}
           </span>
-          {entry.editedByEmployee || entry.editedByManager ? (
+          {entryEditedNote(entry) ? (
             <span className="flex items-center gap-1 text-xs font-medium text-pz-warn">
               <Pencil className="size-3" aria-hidden />
-              Düzenlendi
+              {entryEditedNote(entry)}
             </span>
           ) : null}
         </div>

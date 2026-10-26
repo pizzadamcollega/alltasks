@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, CheckSquare, Users, History } from "lucide-react";
+import { CalendarDays, Home, CheckSquare, Users, History } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AppRole } from "@/types/database";
@@ -27,6 +27,7 @@ function navItemsFor(role: AppRole, branch: string): NavItem[] {
   }
   return [
     { href: `/${branch}`, label: "Ana sayfa", icon: Home },
+    { href: `/${branch}/program`, label: "Program", icon: CalendarDays },
     { href: `/${branch}/onay`, label: "Onay", icon: CheckSquare },
     { href: `/${branch}/calisanlar`, label: "Çalışanlar", icon: Users },
   ];

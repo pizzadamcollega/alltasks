@@ -1,3 +1,4 @@
+import { entryEditedNote } from "@/features/entries/status";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { editEntrySchema } from "@/features/entries/validation";
 
@@ -51,5 +52,19 @@ describe("editEntrySchema", () => {
       endAt: "2026-10-24T22:04:00.000Z",
     });
     expect(result.success).toBe(true);
+  });
+});
+
+describe("entryEditedNote", () => {
+  const base = { manual: false, editedByEmployee: false, editedByManager: false };
+
+  it("labels hand-entered entries first", () => {
+    expect(entryEditedNote({ ...base, manual: true, editedByManager: true })).toBe("Elle girildi");
+  });
+
+  it("falls back to the edit flags, then nothing", () => {
+    expect(entryEditedNote({ ...base, editedByEmployee: true })).toBe("Düzenlendi");
+    expect(entryEditedNote({ ...base, editedByManager: true })).toBe("Patron düzenledi");
+    expect(entryEditedNote(base)).toBeUndefined();
   });
 });

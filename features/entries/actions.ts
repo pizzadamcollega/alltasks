@@ -95,6 +95,40 @@ export async function createManualEntryAction(
   return {};
 }
 
+/**
+ * S2 "Saatleri elle gir": the employee types in a finished shift themselves.
+ * The trigger forces `user_id = auth.uid()`, rejects future/overlapping/older
+ * than 31 days entries, and stores it as approved + `manual` (D-37).
+ */
+export async function addOwnEntryAction(
+  branchId: string,
+  branchSlug: string,
+  startAt: string,
+  endAt: string,
+): Promise<EntryActionResult> {
+  const parsed = editEntrySchema.safeParse({ startAt, endAt });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Geçersiz saat." };
+  }
+
+  const supabase = await createClient();
+  const { data: claims } = await supabase.auth.getClaims();
+  const userId = claims?.claims.sub;
+  if (!userId) return { error: "Oturum bulunamadı, tekrar giriş yap." };
+
+  const { error } = await supabase.from("time_entries").insert({
+    user_id: userId,
+    branch_id: branchId,
+    start_at: parsed.data.startAt.toISOString(),
+    end_at: parsed.data.endAt.toISOString(),
+  });
+  if (error) return { error: toErrorMessage(error) };
+
+  revalidatePath(`/${branchSlug}`);
+  revalidatePath(`/${branchSlug}/gecmis`);
+  return {};
+}
+
 /** S9 "Sil" — delete is manager-only; the DB policy also forbids an employee from ever doing this. */
 export async function deleteEntryAction(
   entryId: string,

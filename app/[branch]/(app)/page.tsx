@@ -4,15 +4,17 @@ import { PatronHome } from "./patron-home";
 
 export default async function BranchHomePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ branch: string }>;
+  searchParams: Promise<{ hafta?: string }>;
 }) {
-  const { branch } = await params;
+  const [{ branch }, { hafta }] = await Promise.all([params, searchParams]);
   const session = await requireSessionContext(branch);
 
   return isManager(session.role) ? (
-    <PatronHome session={session} />
+    <PatronHome session={session} hafta={hafta} />
   ) : (
-    <EmployeeHome session={session} />
+    <EmployeeHome session={session} hafta={hafta} />
   );
 }

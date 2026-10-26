@@ -8,10 +8,12 @@ import {
   formatDuration,
   formatTimeTR,
   isoToAmsterdamLocalInput,
+  manualEntryRange,
   minutesSince,
   monthStart,
   requestDeadline,
   roundMinutes,
+  weekDates,
   weekStart,
 } from "@/lib/time";
 
@@ -136,5 +138,42 @@ describe("formatDayTR", () => {
   it("formats a calendar date as a Turkish weekday + day + month", () => {
     expect(formatDayTR("2026-10-24")).toBe("Cumartesi 24 Ekim");
     expect(formatDayTR("2026-10-25")).toBe("Pazar 25 Ekim");
+  });
+});
+
+describe("manualEntryRange", () => {
+  it("keeps a same-day shift on the given date (CET, UTC+1)", () => {
+    expect(manualEntryRange("2026-10-26", "16:45", "23:15")).toEqual({
+      startAt: "2026-10-26T15:45:00.000Z",
+      endAt: "2026-10-26T22:15:00.000Z",
+    });
+  });
+
+  it("rolls an end time before the start over to the next day", () => {
+    expect(manualEntryRange("2026-10-26", "17:00", "01:30")).toEqual({
+      startAt: "2026-10-26T16:00:00.000Z",
+      endAt: "2026-10-27T00:30:00.000Z",
+    });
+  });
+
+  it("uses summer time before the DST switch night (25 Oct 2026, CEST)", () => {
+    expect(manualEntryRange("2026-10-24", "18:00", "01:00")).toEqual({
+      startAt: "2026-10-24T16:00:00.000Z",
+      endAt: "2026-10-24T23:00:00.000Z",
+    });
+  });
+});
+
+describe("weekDates", () => {
+  it("lists Monday..Sunday across a month boundary", () => {
+    expect(weekDates("2026-10-26")).toEqual([
+      "2026-10-26",
+      "2026-10-27",
+      "2026-10-28",
+      "2026-10-29",
+      "2026-10-30",
+      "2026-10-31",
+      "2026-11-01",
+    ]);
   });
 });

@@ -2,19 +2,19 @@ import Link from "next/link";
 import { addDays, format } from "date-fns";
 import { History } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { formatDayTR, formatDuration, formatTimeTR, minutesSince, monthStart, todayInAmsterdam, weekStart, TR_MONTHS } from "@/lib/time";
+import { formatDayTR, formatDuration, formatTimeTR, monthStart, todayInAmsterdam, weekFromParam, weekStart, TR_MONTHS } from "@/lib/time";
 import { formatEUR } from "@/lib/money";
-import { getOpenEntry } from "@/features/clock/queries";
 import { getEntriesInRange, getMonthlyEarnings, getRecentEntries } from "@/features/entries/queries";
-import { entryStatusLabel, entryStatusTone } from "@/features/entries/status";
-import { getCurrentRate } from "@/features/wages/queries";
-import { ClockCard, type ClockState } from "@/components/app/clock-card";
+import { entryEditedNote, entryStatusLabel, entryStatusTone } from "@/features/entries/status";
+import { getWeekShifts } from "@/features/shifts/queries";
+import { ManualEntryForm } from "@/components/app/manual-entry-form";
+import { WeekCalendar } from "@/components/app/week-calendar";
 import { StatCard, StatGrid } from "@/components/app/stat-card";
 import { EntryRow } from "@/components/app/entry-row";
 import { EmptyState } from "@/components/app/empty-state";
 import type { SessionContext } from "@/lib/session";
 
-export async function EmployeeHome({ session }: { session: SessionContext }) {
+export async function EmployeeHome({ session, hafta }: { session: SessionContext; hafta?: string }) {
   const supabase = await createClient();
   const { userId, fullName, branch } = session;
 
@@ -22,35 +22,22 @@ export async function EmployeeHome({ session }: { session: SessionContext }) {
   const monthStartStr = monthStart(today);
   const weekStartStr = weekStart(today);
   const weekEndStr = format(addDays(new Date(`${weekStartStr}T12:00:00Z`), 6), "yyyy-MM-dd");
+  const calendarMonday = weekFromParam(hafta, today);
 
-  const [openEntry, monthly, todayEntries, weekEntries, recent, currentRate] = await Promise.all([
-    getOpenEntry(supabase, userId),
+  const [monthly, todayEntries, weekEntries, recent, shiftDays] = await Promise.all([
     getMonthlyEarnings(supabase, userId, branch.id, monthStartStr),
     getEntriesInRange(supabase, userId, branch.id, today, today),
     getEntriesInRange(supabase, userId, branch.id, weekStartStr, weekEndStr),
     getRecentEntries(supabase, userId, branch.id, 3),
-    getCurrentRate(supabase, userId, today),
+    getWeekShifts(supabase, branch.id, calendarMonday),
   ]);
 
-  const clockState: ClockState = !openEntry
-    ? { kind: "idle" }
-    : openEntry.branchId === branch.id
-      ? { kind: "running", startAt: openEntry.startAt }
-      : { kind: "otherBranch" };
-
-  // Closed entries come from the DB views; a still-running shift is estimated
-  // live from the clock-in time and today's hourly rate (SCREENS.md S2 "Bugün · tahmini").
-  let liveMinutes = 0;
-  let liveAmount = 0;
-  if (clockState.kind === "running" && currentRate) {
-    liveMinutes = minutesSince(clockState.startAt);
-    liveAmount = (liveMinutes / 60) * currentRate;
-  }
-
-  const todayMinutes = todayEntries.reduce((sum, e) => sum + (e.roundedMinutes ?? 0), 0) + liveMinutes;
-  const todayAmount = todayEntries.reduce((sum, e) => sum + (e.amount ?? 0), 0) + liveAmount;
-  const weekMinutes = weekEntries.reduce((sum, e) => sum + (e.roundedMinutes ?? 0), 0) + liveMinutes;
-  const weekAmount = weekEntries.reduce((sum, e) => sum + (e.amount ?? 0), 0) + liveAmount;
+  // No Başla/Bitir timer any more (D-38): every entry is typed in by hand, so
+  // there is never a running shift to estimate — totals come straight from the views.
+  const todayMinutes = todayEntries.reduce((sum, e) => sum + (e.roundedMinutes ?? 0), 0);
+  const todayAmount = todayEntries.reduce((sum, e) => sum + (e.amount ?? 0), 0);
+  const weekMinutes = weekEntries.reduce((sum, e) => sum + (e.roundedMinutes ?? 0), 0);
+  const weekAmount = weekEntries.reduce((sum, e) => sum + (e.amount ?? 0), 0);
   const monthMinutes = monthly.approvedMinutes + monthly.pendingMinutes;
   const monthAmount = monthly.approvedAmount + monthly.pendingAmount;
   const monthLabel = TR_MONTHS[Number(today.slice(5, 7)) - 1];
@@ -63,7 +50,15 @@ export async function EmployeeHome({ session }: { session: SessionContext }) {
         <p className="text-sm text-pz-muted">{formatDayTR(today)}</p>
       </div>
 
-      <ClockCard branchId={branch.id} branchSlug={branch.slug} state={clockState} />
+      <ManualEntryForm branchId={branch.id} branchSlug={branch.slug} today={today} />
+
+      <WeekCalendar
+        days={shiftDays}
+        today={today}
+        monday={calendarMonday}
+        basePath={`/${branch.slug}`}
+        currentUserId={userId}
+      />
 
       <section aria-label="Kazanç">
         <StatGrid>
@@ -77,7 +72,7 @@ export async function EmployeeHome({ session }: { session: SessionContext }) {
           <StatCard
             label="Bugün"
             value={formatEUR(todayAmount)}
-            sub={clockState.kind === "running" ? `${formatDuration(todayMinutes)} · tahmini` : formatDuration(todayMinutes)}
+            sub={formatDuration(todayMinutes)}
           />
           <StatCard label="Bu hafta" value={formatEUR(weekAmount)} sub={formatDuration(weekMinutes)} />
         </StatGrid>
@@ -91,7 +86,7 @@ export async function EmployeeHome({ session }: { session: SessionContext }) {
           </Link>
         </div>
         {recent.length === 0 ? (
-          <EmptyState icon={History} title="Henüz kayıt yok" description="Başla'ya basınca burada görünecek." />
+          <EmptyState icon={History} title="Henüz kayıt yok" description="Saatlerini girince burada görünecek." />
         ) : (
           <div className="divide-y divide-pz-border rounded-card border border-pz-border bg-pz-surface px-3">
             {recent.map((entry) => (
@@ -101,7 +96,7 @@ export async function EmployeeHome({ session }: { session: SessionContext }) {
                 timeRange={`${formatTimeTR(entry.startAt)} – ${entry.endAt ? formatTimeTR(entry.endAt) : "?"}`}
                 duration={entry.roundedMinutes != null ? formatDuration(entry.roundedMinutes) : "Devam ediyor"}
                 status={{ label: entryStatusLabel(entry.status), tone: entryStatusTone(entry.status) }}
-                editedNote={entry.editedByEmployee ? "Düzenlendi" : entry.editedByManager ? "Patron düzenledi" : undefined}
+                editedNote={entryEditedNote(entry)}
               />
             ))}
           </div>

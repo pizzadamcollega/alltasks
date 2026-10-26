@@ -15,6 +15,7 @@ type SelectedEntryEarningsRow = Pick<
   | "status"
   | "edited_by_employee"
   | "edited_by_manager"
+  | "manual"
   | "hourly_rate"
   | "amount"
 >;
@@ -69,12 +70,13 @@ export interface EntrySummary {
   status: EntryStatus;
   editedByEmployee: boolean;
   editedByManager: boolean;
+  manual: boolean;
   hourlyRate: number | null;
   amount: number | null;
 }
 
 const ENTRY_EARNINGS_COLUMNS =
-  "id, work_date, start_at, end_at, rounded_minutes, status, edited_by_employee, edited_by_manager, hourly_rate, amount";
+  "id, work_date, start_at, end_at, rounded_minutes, status, edited_by_employee, edited_by_manager, manual, hourly_rate, amount";
 
 function mapEntry(row: SelectedEntryEarningsRow): EntrySummary {
   return {
@@ -86,6 +88,7 @@ function mapEntry(row: SelectedEntryEarningsRow): EntrySummary {
     status: row.status,
     editedByEmployee: row.edited_by_employee,
     editedByManager: row.edited_by_manager,
+    manual: row.manual,
     hourlyRate: row.hourly_rate,
     amount: row.amount,
   };

@@ -158,3 +158,36 @@ export function weekdayShortTR(isoWeekday: number): string {
 }
 
 export { TR_WEEKDAYS, TR_WEEKDAYS_SHORT, TR_MONTHS };
+
+/** 'YYYY-MM-DD' shifted by `days` calendar days (DST-safe: works on the date, not on instants). */
+export function addDaysToDate(dateStr: string, days: number): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + days, 12)).toISOString().slice(0, 10);
+}
+
+/** The 7 dates (Mon..Sun) of the week starting at `mondayStr`. */
+export function weekDates(mondayStr: string): string[] {
+  return Array.from({ length: 7 }, (_, i) => addDaysToDate(mondayStr, i));
+}
+
+/**
+ * Hand-entered shift (date + "HH:mm" start/end, Amsterdam wall-clock) -> UTC
+ * instants. An end time at or before the start means the shift ran past
+ * midnight, so the end lands on the next calendar day (17:00 – 01:30).
+ */
+export function manualEntryRange(
+  dateStr: string,
+  startTime: string,
+  endTime: string,
+): { startAt: string; endAt: string } {
+  const endDate = endTime <= startTime ? addDaysToDate(dateStr, 1) : dateStr;
+  return {
+    startAt: amsterdamLocalToISO(`${dateStr}T${startTime}`),
+    endAt: amsterdamLocalToISO(`${endDate}T${endTime}`),
+  };
+}
+
+/** `?hafta=YYYY-MM-DD` -> that week's Monday; anything else -> the current week's Monday. */
+export function weekFromParam(param: string | undefined, today: string): string {
+  return param && /^\d{4}-\d{2}-\d{2}$/.test(param) ? weekStart(param) : weekStart(today);
+}

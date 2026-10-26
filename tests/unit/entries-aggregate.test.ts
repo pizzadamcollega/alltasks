@@ -11,6 +11,7 @@ function entry(partial: Partial<EntrySummary> & { workDate: string }): EntrySumm
     status: "approved",
     editedByEmployee: false,
     editedByManager: false,
+    manual: false,
     hourlyRate: 13,
     amount: 52,
     ...partial,

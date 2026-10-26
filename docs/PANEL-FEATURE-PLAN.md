@@ -151,3 +151,19 @@ migration exactly; nothing here is enforced only in the UI (CLAUDE.md golden rul
 - Verified on production with a Playwright run (scratch script, not committed): admin creates both
   yöneticiler via UI, each yönetici creates one çalışan, cross-branch access → login redirect,
   çalışan sees Başla and can't open Çalışanlar, old `admin` login → `user_banned`.
+
+## 8. Program + manual hours round (2026-10-26)
+
+- **Haftalık program** (`features/shifts/*`, `components/app/week-calendar.tsx`): Mon–Sun board on
+  every home page, ‹ › week arrows (`?hafta=`). Past days grey + "Geçti", today green + "Bugün",
+  future light blue; own name highlighted "(sen)". Phone: day cards stacked; desktop: 7 columns.
+  Yönetici edits it on `/[branch]/program` (add person + start time, change time inline, remove,
+  "Geçen haftayı kopyala"). Nav item "Program" for managers.
+- **Elle saat girişi** replaces Başla/Bitir (D-37/D-38): form "Çalıştığım saatler" on the employee
+  home (Tarih / Başlangıç / Bitiş, duration preview, past-midnight handled). Entries are approved
+  at once and tagged "Elle girildi" everywhere (Geçmiş, Onay, home).
+- Migration `20261026000003_shifts_manual_entries.sql` — **written, NOT yet applied** to any
+  database (applying it to prod needs the owner's go-ahead; see D-39 region move).
+- Patron home: "Bugün" stat is now "saat girdi / programda".
+- Speed: `getClaims` instead of `getUser`, parallel session reads (D-39). Region move pending.
+- `tests/e2e/clock.spec.ts` replaced by `manual-entry.spec.ts` (still not runnable here — no Docker).

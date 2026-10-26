@@ -24,27 +24,25 @@ export const requireSessionContext = cache(async function requireSessionContext(
 ): Promise<SessionContext> {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect(`/${branchSlug}/giris`);
+  // Local JWT verification (see proxy.ts) — RLS still re-checks the token on every query.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims.sub;
+  if (!userId) redirect(`/${branchSlug}/giris`);
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, username, role, theme, active")
-    .eq("id", user.id)
-    .single();
+  // Independent reads, so they go out together instead of back to back.
+  const [{ data: profile }, { data: branch }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("full_name, username, role, theme, active")
+      .eq("id", userId)
+      .single(),
+    supabase.from("branches").select("id, slug, name").eq("slug", branchSlug).maybeSingle(),
+  ]);
 
   if (!profile || !profile.active) {
     await supabase.auth.signOut();
     redirect(`/${branchSlug}/giris?hata=pasif`);
   }
-
-  const { data: branch } = await supabase
-    .from("branches")
-    .select("id, slug, name")
-    .eq("slug", branchSlug)
-    .maybeSingle();
 
   if (!branch) {
     await supabase.auth.signOut();
@@ -52,7 +50,7 @@ export const requireSessionContext = cache(async function requireSessionContext(
   }
 
   return {
-    userId: user.id,
+    userId,
     fullName: profile.full_name,
     username: profile.username,
     role: profile.role,
