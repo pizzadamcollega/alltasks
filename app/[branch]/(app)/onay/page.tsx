@@ -98,7 +98,13 @@ export default async function OnayPage({
         )}
       </div>
 
-      <AddEntryForm branchId={session.branch.id} branchSlug={branchSlug} employees={employees} />
+      <AddEntryForm
+        branchId={session.branch.id}
+        branchSlug={branchSlug}
+        employees={employees}
+        day={day}
+        today={today}
+      />
 
       <ApproveAllButton entryIds={approvableIds} branchSlug={branchSlug} />
     </div>

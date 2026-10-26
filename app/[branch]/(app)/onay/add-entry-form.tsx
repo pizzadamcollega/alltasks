@@ -3,11 +3,11 @@
 import { useActionState, useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { amsterdamLocalToISO } from "@/lib/time";
+import { formatDayTR } from "@/lib/time";
+import { ShiftRangeFields, readShiftRange } from "@/components/app/shift-range-fields";
 import { createManualEntryAction, type EntryActionResult } from "@/features/entries/actions";
 import type { BranchEmployee } from "@/features/branch/queries";
 
@@ -17,10 +17,15 @@ export function AddEntryForm({
   branchId,
   branchSlug,
   employees,
+  day,
+  today,
 }: {
   branchId: string;
   branchSlug: string;
   employees: BranchEmployee[];
+  /** The Onay day being viewed — a new entry always lands on it. */
+  day: string;
+  today: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -28,17 +33,11 @@ export function AddEntryForm({
     _previous: EntryActionResult,
     formData: FormData,
   ): Promise<EntryActionResult> {
-    const userId = String(formData.get("userId"));
-    const startLocal = String(formData.get("startAt"));
-    const endLocal = String(formData.get("endAt"));
+    const userId = String(formData.get("userId") ?? "");
     if (!userId) return { error: "Bir çalışan seç." };
-    const result = await createManualEntryAction(
-      branchId,
-      branchSlug,
-      userId,
-      amsterdamLocalToISO(startLocal),
-      amsterdamLocalToISO(endLocal),
-    );
+    const range = readShiftRange(formData);
+    if (!range) return { error: "Başlangıç ve bitiş saatini seç." };
+    const result = await createManualEntryAction(branchId, branchSlug, userId, range.startAt, range.endAt);
     if (!result.error) setOpen(false);
     return result;
   }
@@ -47,7 +46,7 @@ export function AddEntryForm({
 
   if (!open) {
     return (
-      <Button type="button" variant="outline" className="gap-2" onClick={() => setOpen(true)}>
+      <Button type="button" variant="outline" className="h-12 gap-2 rounded-xl" onClick={() => setOpen(true)}>
         <Plus className="size-4" aria-hidden />
         Kayıt ekle
       </Button>
@@ -58,10 +57,11 @@ export function AddEntryForm({
     <Card className="rounded-card">
       <CardContent className="pt-4">
         <form action={formAction} className="flex flex-col gap-3">
+          <h2 className="text-base font-bold text-pz-text">{formatDayTR(day)} · kayıt ekle</h2>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="userId">Çalışan</Label>
             <Select name="userId">
-              <SelectTrigger id="userId" className="w-full">
+              <SelectTrigger id="userId" className="h-12 w-full text-base">
                 <SelectValue placeholder="Çalışan seç" />
               </SelectTrigger>
               <SelectContent>
@@ -73,26 +73,17 @@ export function AddEntryForm({
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="newStartAt">Başlangıç</Label>
-              <Input id="newStartAt" name="startAt" type="datetime-local" required />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="newEndAt">Bitiş</Label>
-              <Input id="newEndAt" name="endAt" type="datetime-local" required />
-            </div>
-          </div>
+          <ShiftRangeFields idPrefix="add" today={today} defaultDate={day} showDate={false} />
           {state.error ? (
             <p role="alert" className="text-sm font-medium text-pz-bad">
               {state.error}
             </p>
           ) : null}
           <div className="flex gap-2">
-            <Button type="button" variant="outline" className="flex-1" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" className="h-12 flex-1" onClick={() => setOpen(false)}>
               Vazgeç
             </Button>
-            <Button type="submit" disabled={pending} className="flex-1">
+            <Button type="submit" disabled={pending} className="h-12 flex-1">
               {pending ? "Ekleniyor…" : "Ekle"}
             </Button>
           </div>

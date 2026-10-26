@@ -38,6 +38,10 @@ export async function EmployeeHome({ session, hafta }: { session: SessionContext
   const todayAmount = todayEntries.reduce((sum, e) => sum + (e.amount ?? 0), 0);
   const weekMinutes = weekEntries.reduce((sum, e) => sum + (e.roundedMinutes ?? 0), 0);
   const weekAmount = weekEntries.reduce((sum, e) => sum + (e.amount ?? 0), 0);
+  // today's programmed start pre-fills the form; only known when the board shows this week
+  const todayShiftStart = shiftDays
+    .find((day) => day.date === today)
+    ?.shifts.find((shift) => shift.userId === userId)?.startTime;
   const monthMinutes = monthly.approvedMinutes + monthly.pendingMinutes;
   const monthAmount = monthly.approvedAmount + monthly.pendingAmount;
   const monthLabel = TR_MONTHS[Number(today.slice(5, 7)) - 1];
@@ -50,7 +54,12 @@ export async function EmployeeHome({ session, hafta }: { session: SessionContext
         <p className="text-sm text-pz-muted">{formatDayTR(today)}</p>
       </div>
 
-      <ManualEntryForm branchId={branch.id} branchSlug={branch.slug} today={today} />
+      <ManualEntryForm
+        branchId={branch.id}
+        branchSlug={branch.slug}
+        today={today}
+        suggestedStart={todayShiftStart}
+      />
 
       <WeekCalendar
         days={shiftDays}

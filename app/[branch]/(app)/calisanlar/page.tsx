@@ -34,7 +34,7 @@ export default async function CalisanlarPage({
         </h1>
         <Link
           href={showManagers ? `/${branchSlug}/calisanlar/yonetici/yeni` : `/${branchSlug}/calisanlar/yeni`}
-          className="flex items-center gap-1.5 rounded-xl bg-pz-accent-soft px-3 py-2 text-sm font-semibold text-pz-accent"
+          className="flex h-11 items-center gap-1.5 rounded-xl bg-pz-accent-soft px-3 text-sm font-semibold text-pz-accent"
         >
           <Plus className="size-4" aria-hidden />
           {showManagers ? "Yeni yönetici" : "Yeni çalışan"}

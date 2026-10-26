@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { TimePicker } from "./time-picker";
 import { deleteShiftAction, upsertShiftAction } from "@/features/shifts/actions";
 import type { ShiftDay } from "@/features/shifts/queries";
 import type { BranchEmployee } from "@/features/branch/queries";
@@ -25,6 +25,7 @@ export function ShiftDayEditor({
 }) {
   const [pending, startTransition] = useTransition();
   const [adding, setAdding] = useState(false);
+  const [newStart, setNewStart] = useState("");
 
   const onDay = new Set(day.shifts.map((s) => s.userId));
   const available = employees.filter((e) => !onDay.has(e.userId));
@@ -56,16 +57,15 @@ export function ShiftDayEditor({
       <ul className="flex flex-col gap-1.5">
         {day.shifts.map((shift) => (
           <li key={shift.id} className="flex items-center gap-2">
-            <Input
-              type="time"
-              aria-label={`${shift.fullName} başlangıç saati`}
-              defaultValue={shift.startTime}
-              disabled={pending}
-              onBlur={(e) => {
-                if (e.target.value && e.target.value !== shift.startTime) save(shift.userId, e.target.value);
-              }}
-              className="h-11 w-[6.5rem] shrink-0 bg-pz-surface text-base tabular-nums"
-            />
+            <div className="w-[6.5rem] shrink-0">
+              <TimePicker
+                id={`shift-${shift.id}`}
+                label={`${shift.fullName} başlangıç saati`}
+                value={shift.startTime}
+                onChange={(value) => value !== shift.startTime && save(shift.userId, value)}
+                size="sm"
+              />
+            </div>
             <span className="min-w-0 flex-1 truncate text-sm font-semibold text-pz-text">{shift.fullName}</span>
             <Button
               type="button"
@@ -88,7 +88,7 @@ export function ShiftDayEditor({
           action={(formData) => {
             const userId = String(formData.get("userId") ?? "");
             if (!userId) return void toast.error("Bir çalışan seç.");
-            save(userId, String(formData.get("startTime")), () => setAdding(false));
+            save(userId, newStart || lastStart, () => setAdding(false));
           }}
         >
           <select
@@ -96,7 +96,7 @@ export function ShiftDayEditor({
             aria-label="Çalışan"
             defaultValue=""
             required
-            className="h-11 rounded-lg border border-pz-border bg-pz-surface px-2 text-base text-pz-text"
+            className="h-11 rounded-lg border border-pz-border bg-pz-surface px-2 text-base text-pz-text focus-visible:outline-2 focus-visible:outline-pz-accent"
           >
             <option value="" disabled>
               Çalışan seç
@@ -108,14 +108,15 @@ export function ShiftDayEditor({
             ))}
           </select>
           <div className="flex gap-2">
-            <Input
-              name="startTime"
-              type="time"
-              aria-label="Başlangıç saati"
-              defaultValue={lastStart}
-              required
-              className="h-11 flex-1 text-base tabular-nums"
-            />
+            <div className="flex-1">
+              <TimePicker
+                id={`new-shift-${day.date}`}
+                label="Başlangıç saati"
+                value={newStart || lastStart}
+                onChange={setNewStart}
+                size="sm"
+              />
+            </div>
             <Button type="submit" disabled={pending} className="h-11">
               Ekle
             </Button>
@@ -129,7 +130,10 @@ export function ShiftDayEditor({
           type="button"
           variant="outline"
           disabled={pending}
-          onClick={() => setAdding(true)}
+          onClick={() => {
+            setNewStart("");
+            setAdding(true);
+          }}
           className="h-11 gap-1.5 bg-pz-surface"
         >
           <Plus className="size-4" aria-hidden />

@@ -14,13 +14,13 @@ export function BranchSwitcher({ currentSlug }: { currentSlug: string }) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-semibold text-pz-text">
+      <DropdownMenuTrigger className="flex h-11 items-center gap-1 rounded-xl px-1 text-sm font-semibold text-pz-text">
         {currentName}
         <ChevronDown className="size-4" aria-hidden />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
         {Object.entries(BRANCHES).map(([slug, branch]) => (
-          <DropdownMenuItem key={slug} asChild>
+          <DropdownMenuItem key={slug} asChild className="min-h-11">
             <Link href={`/${slug}`}>{branch.name}</Link>
           </DropdownMenuItem>
         ))}

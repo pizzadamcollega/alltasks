@@ -77,7 +77,6 @@ export function PaymentsSection({
         <Button
           type="button"
           variant="ghost"
-          size="sm"
           className="gap-1 text-pz-accent"
           onClick={() => setAdding((v) => !v)}
         >
@@ -116,7 +115,6 @@ export function PaymentsSection({
                   <Button
                     type="button"
                     variant="ghost"
-                    size="sm"
                     className="text-pz-bad"
                     onClick={() => handleDelete(payment.id)}
                   >

@@ -169,3 +169,15 @@ migration exactly; nothing here is enforced only in the UI (CLAUDE.md golden rul
 - Speed: `getClaims` instead of `getUser`, parallel session reads (D-39), DB + functions moved to
   Frankfurt (D-40). Measured on prod after the move: authenticated pages 0.25–0.45 s.
 - `tests/e2e/clock.spec.ts` replaced by `manual-entry.spec.ts` (still not runnable here — no Docker).
+
+## 9. UI round (2026-10-26)
+
+- New pickers (D-42) everywhere hours are entered: employee home, Geçmiş edit, Onay add/edit and
+  missing-end fix-up, Program. Start time pre-fills from today's program.
+- Phone fixes: 260 px horizontal overflow on the employee home (layout column lacked `min-w-0`),
+  44 px targets (buttons/inputs/select defaults, Geçmiş tabs + month arrows, Çalışanlar "Yeni …",
+  branch switcher), nested-interactive axe error in the day strip.
+- Wage fallback fix (D-41).
+- **Acceptance suite** `node tests/manual/acceptance.mjs [BASE]` — 78 checks across all roles
+  (flows, permissions, per-page overflow / 44 px / axe, console errors); creates and removes data
+  for `test.*` accounts only. Result on prod 2026-10-26: 78/78.

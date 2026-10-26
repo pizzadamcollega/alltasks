@@ -5,9 +5,10 @@ import { toast } from "sonner";
 import { Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { StatusChip } from "@/components/app/status-chip";
-import { amsterdamLocalToISO, formatDuration, formatTimeTR, isoToAmsterdamLocalInput } from "@/lib/time";
+import { formatDuration, formatTimeTR, isoToAmsterdamLocalInput, manualEntryRange, todayInAmsterdam } from "@/lib/time";
+import { ShiftRangeFields, readShiftRange } from "@/components/app/shift-range-fields";
+import { TimePicker } from "@/components/app/time-picker";
 import { formatEUR } from "@/lib/money";
 import { entryStatusLabel, entryStatusTone, entryEditedNote } from "@/features/entries/status";
 import { approveEntriesAction, deleteEntryAction, managerUpdateEntryAction } from "@/features/entries/actions";
@@ -22,6 +23,8 @@ export function ApprovalCard({
   branchSlug: string;
 }) {
   const [editing, setEditing] = useState(false);
+  const [fixEnd, setFixEnd] = useState("");
+  const startLocal = isoToAmsterdamLocalInput(entry.startAt);
   const [pending, startTransition] = useTransition();
   const missing = entry.status === "open" || entry.endAt === null;
   const canApprove = !missing && entry.status !== "approved";
@@ -42,30 +45,21 @@ export function ApprovalCard({
   }
 
   function handleSaveEdit(formData: FormData) {
-    const startLocal = String(formData.get("startAt"));
-    const endLocal = String(formData.get("endAt"));
+    const range = readShiftRange(formData);
+    if (!range) return void toast.error("Başlangıç ve bitiş saatini seç.");
     startTransition(async () => {
-      const result = await managerUpdateEntryAction(
-        entry.id,
-        branchSlug,
-        amsterdamLocalToISO(startLocal),
-        amsterdamLocalToISO(endLocal),
-      );
+      const result = await managerUpdateEntryAction(entry.id, branchSlug, range.startAt, range.endAt);
       if (result.error) toast.error(result.error);
       else setEditing(false);
     });
   }
 
-  function handleFixEnd(formData: FormData) {
-    const endTime = String(formData.get("endTime"));
-    const endLocal = `${entry.workDate}T${endTime}`;
+  function handleFixEnd() {
+    if (!fixEnd) return void toast.error("Bitiş saatini seç.");
+    // same rule as hand entry: an end at/before the start time is the next day
+    const { endAt } = manualEntryRange(startLocal.slice(0, 10), startLocal.slice(11, 16), fixEnd);
     startTransition(async () => {
-      const result = await managerUpdateEntryAction(
-        entry.id,
-        branchSlug,
-        entry.startAt,
-        amsterdamLocalToISO(endLocal),
-      );
+      const result = await managerUpdateEntryAction(entry.id, branchSlug, entry.startAt, endAt);
       if (result.error) toast.error(result.error);
     });
   }
@@ -118,12 +112,13 @@ export function ApprovalCard({
             <label htmlFor={`end-${entry.id}`} className="text-xs font-medium text-pz-bad">
               Bitiş saati girilmedi
             </label>
-            <Input
+            <TimePicker
               id={`end-${entry.id}`}
-              name="endTime"
-              type="time"
-              required
-              className="h-11 border-pz-bad"
+              label="Bitiş"
+              value={fixEnd}
+              onChange={setFixEnd}
+              size="sm"
+              invalid
             />
           </div>
           <Button type="submit" disabled={pending} className="h-11">
@@ -132,36 +127,15 @@ export function ApprovalCard({
         </form>
       ) : editing ? (
         <form action={handleSaveEdit} className="flex flex-col gap-2 border-t border-pz-border pt-3">
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-1">
-              <label htmlFor={`start-${entry.id}`} className="text-xs font-medium text-pz-muted">
-                Başlangıç
-              </label>
-              <Input
-                id={`start-${entry.id}`}
-                name="startAt"
-                type="datetime-local"
-                defaultValue={isoToAmsterdamLocalInput(entry.startAt)}
-                required
-                className="h-11"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor={`endEdit-${entry.id}`} className="text-xs font-medium text-pz-muted">
-                Bitiş
-              </label>
-              <Input
-                id={`endEdit-${entry.id}`}
-                name="endAt"
-                type="datetime-local"
-                defaultValue={entry.endAt ? isoToAmsterdamLocalInput(entry.endAt) : undefined}
-                required
-                className="h-11"
-              />
-            </div>
-          </div>
+          <ShiftRangeFields
+            idPrefix={`approve-${entry.id}`}
+            today={todayInAmsterdam()}
+            defaultDate={startLocal.slice(0, 10)}
+            defaultStart={startLocal.slice(11, 16)}
+            defaultEnd={entry.endAt ? isoToAmsterdamLocalInput(entry.endAt).slice(11, 16) : ""}
+          />
           <div className="flex gap-2">
-            <Button type="button" variant="outline" className="flex-1" onClick={() => setEditing(false)}>
+            <Button type="button" variant="outline" className="h-11 flex-1" onClick={() => setEditing(false)}>
               Vazgeç
             </Button>
             <Button type="submit" disabled={pending} className="flex-1">

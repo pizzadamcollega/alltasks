@@ -84,7 +84,7 @@ export default async function GecmisPage({
           <Link
             href={`?ay=${prevYm}&sekme=${tab}`}
             aria-label="Önceki ay"
-            className="flex size-9 items-center justify-center rounded-full text-pz-text hover:bg-pz-surface-2"
+            className="flex size-11 items-center justify-center rounded-full text-lg text-pz-text hover:bg-pz-surface-2"
           >
             ‹
           </Link>
@@ -95,8 +95,8 @@ export default async function GecmisPage({
             aria-disabled={isCurrentMonth}
             className={
               isCurrentMonth
-                ? "flex size-9 items-center justify-center rounded-full text-pz-muted"
-                : "flex size-9 items-center justify-center rounded-full text-pz-text hover:bg-pz-surface-2"
+                ? "flex size-11 items-center justify-center rounded-full text-lg text-pz-muted"
+                : "flex size-11 items-center justify-center rounded-full text-lg text-pz-text hover:bg-pz-surface-2"
             }
           >
             ›
@@ -115,8 +115,8 @@ export default async function GecmisPage({
             aria-current={tab === t.value ? "page" : undefined}
             className={
               tab === t.value
-                ? "flex h-9 items-center justify-center rounded-xl bg-pz-surface text-sm font-semibold text-pz-text shadow-sm"
-                : "flex h-9 items-center justify-center rounded-xl text-sm font-semibold text-pz-muted"
+                ? "flex h-11 items-center justify-center rounded-xl bg-pz-surface text-sm font-semibold text-pz-text shadow-sm"
+                : "flex h-11 items-center justify-center rounded-xl text-sm font-semibold text-pz-muted"
             }
           >
             {t.label}

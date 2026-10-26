@@ -9,7 +9,10 @@ export interface WageRate {
   effectiveFrom: string;
 }
 
-/** The rate effective on `asOfDate` ('YYYY-MM-DD') — the latest row with effective_from <= that date. */
+/**
+ * The rate effective on `asOfDate` ('YYYY-MM-DD') — the latest row with
+ * effective_from <= that date, else the earliest row (mirrors `entry_earnings`, D-41).
+ */
 export async function getCurrentRate(
   supabase: Client,
   userId: string,
@@ -23,8 +26,16 @@ export async function getCurrentRate(
     .order("effective_from", { ascending: false })
     .limit(1)
     .maybeSingle();
+  if (data) return data.hourly_rate;
 
-  return data?.hourly_rate ?? null;
+  const { data: earliest } = await supabase
+    .from("wage_rates")
+    .select("hourly_rate")
+    .eq("user_id", userId)
+    .order("effective_from", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return earliest?.hourly_rate ?? null;
 }
 
 /** Full history, newest first — used by S13 (manager) and S5 (employee, current row only). */

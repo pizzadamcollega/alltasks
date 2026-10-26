@@ -10,7 +10,7 @@ export function ErrorCard({ onRetry }: { onRetry: () => void }) {
     >
       <AlertTriangle className="size-6 text-pz-bad" aria-hidden />
       <p className="text-sm font-semibold text-pz-bad">Bir hata oluştu, tekrar dene.</p>
-      <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+      <Button type="button" variant="outline" onClick={onRetry}>
         Yenile
       </Button>
     </div>
