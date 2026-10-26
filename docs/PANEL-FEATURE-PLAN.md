@@ -181,3 +181,12 @@ migration exactly; nothing here is enforced only in the UI (CLAUDE.md golden rul
 - **Acceptance suite** `node tests/manual/acceptance.mjs [BASE]` — 78 checks across all roles
   (flows, permissions, per-page overflow / 44 px / axe, console errors); creates and removes data
   for `test.*` accounts only. Result on prod 2026-10-26: 78/78.
+
+## 10. Program requests round (2026-10-26, D-43)
+
+- "Haftalık program" (`/[branch]/program`) is now in every role's nav (sidebar label "Haftalık program", bottom bar "Program").
+- **Çalışan**: picks days + start time (+ optional note) for a future week (next 8 weeks) → "Onaya gönder". Sees Bekliyor / Onaylandı / Reddedildi per day; can withdraw pending days. Once the week is published, the page shows the published board instead.
+- **Yönetici**: "Gelen istekler" grouped by day — Onayla, Reddet, time button = approve at another start time, "Hepsini onayla". Approved requests land on the `shifts` board ("Nihai program", still hand-editable). "Programı yayınla" / "Yayından kaldır" per week; Taslak/Yayınlandı badge.
+- Future weeks are hidden from employees until published (`shifts_select` RLS); current and past weeks always visible. Home pages: published board in the calendar, "henüz yayınlanmadı" notice, employee "Gelecek hafta için gün iste" card, patron "X program isteği onay bekliyor" reminder.
+- DB: `shift_requests`, `shift_week_publications`, RPCs `submit_shift_requests`, `decide_shift_request`, `approve_pending_shift_requests` (migration 20261026000005, applied to prod).
+- Verified: `tests/manual/acceptance.mjs` 98/98 on prod (20 new checks incl. DB-level denials).
