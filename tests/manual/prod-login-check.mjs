@@ -1,5 +1,8 @@
 import { chromium } from "playwright";
 
+// Credentials come from the owner's local .env.local (LOGIN_FURKAN_*), never from the repo.
+process.loadEnvFile(".env.local");
+
 const BASE = "https://alltasks-mauve.vercel.app";
 const browser = await chromium.launch();
 const page = await browser.newPage();
@@ -10,8 +13,8 @@ page.on("response", (res) => {
 });
 
 await page.goto(`${BASE}/de-pijp/giris`, { waitUntil: "networkidle" });
-await page.getByLabel("Kullanıcı adı").fill("admin");
-await page.locator("#password").fill("Pizza2026Admin!");
+await page.getByLabel("Kullanıcı adı").fill(process.env.LOGIN_FURKAN_USER);
+await page.locator("#password").fill(process.env.LOGIN_FURKAN_PASS);
 await page.getByRole("button", { name: "Giriş yap" }).click();
 await page.waitForTimeout(6000);
 await page.waitForLoadState("networkidle").catch(() => {});

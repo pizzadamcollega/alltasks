@@ -15,7 +15,8 @@
     "db:types": "supabase gen types typescript --local > types/database.ts",
     "db:reset": "supabase db reset",
     "db:seed-users": "tsx scripts/seed-test-users.ts",
-    "create-user": "tsx scripts/create-user.ts"
+    "create-user": "tsx scripts/create-user.ts",
+    "set-active": "tsx scripts/set-active.ts"
   },
   "dependencies": {
     "@date-fns/tz": "^1.5.0",

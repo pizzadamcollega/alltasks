@@ -6,11 +6,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { suggestUsername } from "@/lib/validation/username";
 import { createEmployeeAction, type AccountActionResult } from "@/features/accounts/actions";
+import type { BranchOption } from "@/features/accounts/queries";
 import { todayInAmsterdam } from "@/lib/time";
 
 const initialState: AccountActionResult = {};
 
-export function NewEmployeeForm({ branchId, branchSlug }: { branchId: string; branchSlug: string }) {
+/**
+ * `branches` is only passed for an admin (SCREENS S14 "Şubeler: admin
+ * checkboxes"); a patron's account always lands in their own branch.
+ */
+export function NewEmployeeForm({
+  branchId,
+  branchSlug,
+  branches,
+}: {
+  branchId: string;
+  branchSlug: string;
+  branches?: BranchOption[];
+}) {
   const [username, setUsername] = useState("");
   const [usernameTouched, setUsernameTouched] = useState(false);
 
@@ -18,7 +31,8 @@ export function NewEmployeeForm({ branchId, branchSlug }: { branchId: string; br
     _previous: AccountActionResult,
     formData: FormData,
   ): Promise<AccountActionResult> {
-    return createEmployeeAction(branchId, branchSlug, {
+    return createEmployeeAction(branchSlug, {
+      branchIds: branches ? formData.getAll("branchIds") : [branchId],
       fullName: formData.get("fullName"),
       username: formData.get("username"),
       password: formData.get("password"),
@@ -62,12 +76,29 @@ export function NewEmployeeForm({ branchId, branchSlug }: { branchId: string; br
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="hourlyRate">Saatlik ücret (€)</Label>
-        <Input id="hourlyRate" name="hourlyRate" type="number" step="0.05" min="0.01" max="999.99" required />
+        <Input id="hourlyRate" name="hourlyRate" type="number" step="0.01" min="0.01" max="999.99" required />
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="startedOn">Başlangıç tarihi</Label>
         <Input id="startedOn" name="startedOn" type="date" defaultValue={todayInAmsterdam()} required />
       </div>
+      {branches ? (
+        <fieldset className="flex flex-col gap-1.5">
+          <legend className="mb-1.5 text-sm font-medium">Şubeler</legend>
+          {branches.map((branch) => (
+            <label key={branch.id} className="flex min-h-11 items-center gap-3 text-sm text-pz-text">
+              <input
+                type="checkbox"
+                name="branchIds"
+                value={branch.id}
+                defaultChecked={branch.id === branchId}
+                className="size-5 accent-pz-accent"
+              />
+              {branch.name}
+            </label>
+          ))}
+        </fieldset>
+      ) : null}
 
       {state.error ? (
         <p role="alert" className="text-sm font-medium text-pz-bad">

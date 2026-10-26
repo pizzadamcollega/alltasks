@@ -70,7 +70,7 @@ export function WageCard({
             <div className="grid grid-cols-2 gap-2">
               <div className="flex flex-col gap-1">
                 <Label htmlFor="hourlyRate">Yeni ücret (€)</Label>
-                <Input id="hourlyRate" name="hourlyRate" type="number" step="0.05" min="0.01" max="999.99" required />
+                <Input id="hourlyRate" name="hourlyRate" type="number" step="0.01" min="0.01" max="999.99" required />
               </div>
               <div className="flex flex-col gap-1">
                 <Label htmlFor="effectiveFrom">Geçerlilik tarihi</Label>

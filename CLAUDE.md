@@ -16,9 +16,11 @@ list are in **`docs/PANEL-FEATURE-PLAN.md` — read that file second, right afte
   Çalışanlar/ücret/ödeme). Phase 6–11 (Program, swaps, leave, notifications, Raporlar/export,
   Ayarlar, PWA) are **not built yet**.
 - **Supabase**: real project `fgpjzqybsijlasuoklen` (ap-northeast-2), both migrations + seed
-  applied. Staff e-mail domain `staff.pizzadam.invalid` confirmed working (D-28). An admin account
-  exists: username `admin`, password `Pizza2026Admin!` — **change this password** once someone is
-  actually using it.
+  applied. Staff e-mail domain `staff.pizzadam.invalid` confirmed working (D-28). Live accounts
+  (2026-10-26, D-33..D-35): admin `furkan`; yöneticiler `yonetici.pijp` / `yonetici.zuid`; test
+  çalışanlar `test.ahmet` / `test.murat`. Passwords live **only** in the owner's local `.env.local`
+  (`LOGIN_*` vars, gitignored + `.vercelignore`d) — never write them into the repo. The original
+  generic `admin` account is deactivated (banned).
 - **GitHub**: pushed to `https://github.com/pizzadamcollega/alltasks.git`, branch `main`.
 - **Vercel**: deployed at `https://alltasks-mauve.vercel.app`, linked locally (`vercel link
   --project alltasks`). Login confirmed working end-to-end in production 2026-10-27 (admin →
@@ -31,9 +33,8 @@ list are in **`docs/PANEL-FEATURE-PLAN.md` — read that file second, right afte
   executed — only lint/typecheck/unit-test/build were verified. `SUPABASE_DB_URL` (session-pooler
   form, D-29) is in `.env.local` and works for one-off `supabase db push --db-url ...` calls, which
   don't need Docker.
-- **Known real gaps** (not just unverified — actually not implemented): no multi-branch picker for
-  admin when creating an employee; edited-entry audit original-value isn't shown in the UI; no
-  `/dev/ui` component showcase. Full list in `docs/PANEL-FEATURE-PLAN.md` §6.
+- **Known real gaps** (not just unverified — actually not implemented): edited-entry audit
+  original-value isn't shown in the UI; no `/dev/ui` component showcase. Full list in `docs/PANEL-FEATURE-PLAN.md` §6.
 
 ## Read first
 
@@ -93,6 +94,7 @@ npm run db:types       # supabase gen types typescript --local > types/database.
 npm run db:reset       # supabase db reset (migrations + seed.sql)
 npm run db:seed-users  # tsx scripts/seed-test-users.ts (local only)
 npm run create-user    # tsx scripts/create-user.ts — create admin/patron/employee in any env
+npm run set-active     # tsx scripts/set-active.ts — (de)activate any account incl. admins
 ```
 
 ## Glossary (use these Turkish UI terms consistently)

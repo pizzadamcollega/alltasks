@@ -190,12 +190,16 @@ export interface Database {
         Args: { p_ids: string[] };
         Returns: number;
       };
+      is_admin: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
       is_branch_manager: {
-        Args: { branch: string };
+        Args: { p_branch: string };
         Returns: boolean;
       };
       manages_user: {
-        Args: { user: string };
+        Args: { p_user: string };
         Returns: boolean;
       };
     };

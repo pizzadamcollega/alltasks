@@ -13,7 +13,7 @@ ARCHITECTURE/DESIGN, it records the decisions and status specific to this featur
 | DB connection (local/CI only) | Session pooler, `.env.local`'s `SUPABASE_DB_URL` (D-29) — never set this on Vercel. |
 | GitHub | `https://github.com/pizzadamcollega/alltasks.git`, branch `main`, pushed. |
 | Vercel | `https://alltasks-mauve.vercel.app` — deployed, **login confirmed working end-to-end**. |
-| First admin account | username `admin`, password `Pizza2026Admin!` (change it once someone real uses it). |
+| Accounts | admin `furkan`; yönetici `yonetici.pijp` (De Pijp), `yonetici.zuid` (Zuid); test çalışan `test.ahmet` (De Pijp), `test.murat` (Zuid), €14/sa. Passwords only in local `.env.local` `LOGIN_*`. Old `admin` deactivated. |
 
 Vercel env vars were initially missing `STAFF_EMAIL_DOMAIN` / `APP_BASE_URL` (login failed with
 "Sunucu yapılandırması eksik" — that string only appears when `STAFF_EMAIL_DOMAIN` is unset, see
@@ -57,7 +57,8 @@ See DECISIONS.md D-23 .. D-27 for the exact entries this round added.
 | **Change** a wage | ❌ never | ✅ **except their own** (`user_id <> auth.uid()` in RLS) | `/[branch]/calisanlar/[id]`, `changeWageAction` |
 | See payments/advances | ✅ only records marked visible | ✅ all | `getVisiblePayments` vs `getAllPaymentsForMonth` |
 | Add/edit/delete a payment, toggle visibility | ❌ | ✅ | `features/payments/actions.ts` |
-| Create an employee account | ❌ | ✅ (service-role, rights re-checked server-side) | `/[branch]/calisanlar/yeni`, `features/accounts/actions.ts` |
+| Create an employee account | ❌ | ✅ (service-role, rights re-checked server-side); admin may pick several branches | `/[branch]/calisanlar/yeni`, `createEmployeeAction` |
+| Create / manage a **yönetici** (patron, one branch) | ❌ | Admin only (patron ❌) | `/[branch]/calisanlar?sekme=yoneticiler`, `calisanlar/yonetici/*`, `createManagerAction` |
 | Reset a password / (de)activate an account | ❌ | ✅ (own) | `AccountSection`, `resetPasswordAction` / `setActiveAction` |
 | Change own theme / password | ✅ | ✅ | `/[branch]/profil` |
 
@@ -130,12 +131,23 @@ migration exactly; nothing here is enforced only in the UI (CLAUDE.md golden rul
 - `datetime-local` inputs are read as Amsterdam wall-clock regardless of the device's own locale
   setting (`lib/time.ts#amsterdamLocalToISO`) — correct for on-site staff phones, would need
   revisiting if remote editing from another timezone is ever a real scenario.
-- "Yeni çalışan" always creates the account in the branch currently being viewed; there's no
-  multi-branch picker yet for admin creating someone in several branches at once (ROADMAP Phase 5
-  mentions this for admin specifically — real gap, not just unverified).
 - The "Düzenlendi" tag on an edited entry doesn't show the original time from `time_entry_audit`
   (ROADMAP Phase 4 acceptance) — only that it was edited. Pulling the audit row in is
   straightforward follow-up work if the owner wants it.
 - No standalone `/dev/ui` component showcase (ROADMAP Phase 1) — components were built and checked
   directly against the real screens instead of a separate catalogue page.
 
+
+## 7. Accounts round (2026-10-26)
+
+- Admin "Çalışanlar | Yöneticiler" tabs; "Yeni yönetici" form (one branch, radio) and yönetici
+  profile (branch + shared Hesap card). Patron never sees the tab; `/calisanlar/yonetici/*`
+  redirects non-admins. Admin "Yeni çalışan" now has Şubeler checkboxes.
+- **Fixed two real prod bugs** found while doing this: (1) `rpc("is_branch_manager", { branch })`
+  / `rpc("manages_user", { user })` used the wrong argument names (SQL is `p_branch` / `p_user`),
+  so PostgREST returned `PGRST202` and every create-employee / reset-password / (de)activate call
+  answered "Bu işlem için yetkin yok." (D-34). (2) Saatlik ücret inputs had `step="0.05" min="0.01"`,
+  which makes round values like `14` invalid in the browser, so the form never submitted.
+- Verified on production with a Playwright run (scratch script, not committed): admin creates both
+  yöneticiler via UI, each yönetici creates one çalışan, cross-branch access → login redirect,
+  çalışan sees Başla and can't open Çalışanlar, old `admin` login → `user_banned`.

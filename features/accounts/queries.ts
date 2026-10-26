@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/database";
+import type { AppRole, Database } from "@/types/database";
 
 type Client = SupabaseClient<Database>;
 
@@ -75,6 +75,7 @@ export interface EmployeeProfile {
   username: string;
   active: boolean;
   startedOn: string | null;
+  role: AppRole;
 }
 
 export async function getEmployeeProfile(
@@ -83,7 +84,7 @@ export async function getEmployeeProfile(
 ): Promise<EmployeeProfile | null> {
   const { data } = await supabase
     .from("profiles")
-    .select("id, full_name, username, active, started_on")
+    .select("id, full_name, username, active, started_on, role")
     .eq("id", userId)
     .maybeSingle();
 
@@ -94,5 +95,67 @@ export async function getEmployeeProfile(
     username: data.username,
     active: data.active,
     startedOn: data.started_on,
+    role: data.role,
   };
+}
+
+export interface BranchOption {
+  id: string;
+  slug: string;
+  name: string;
+}
+
+/** Every branch the caller can see — for an admin (`branches_select` RLS) that is all of them. */
+export async function getBranchOptions(supabase: Client): Promise<BranchOption[]> {
+  const { data } = await supabase
+    .from("branches")
+    .select("id, slug, name")
+    .order("name", { ascending: true });
+  return data ?? [];
+}
+
+export interface ManagerListRow {
+  userId: string;
+  fullName: string;
+  username: string;
+  active: boolean;
+  branchNames: string[];
+}
+
+/** Admin "Yöneticiler" tab — every patron account, across all branches. */
+export async function getManagerList(supabase: Client): Promise<ManagerListRow[]> {
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, full_name, username, active")
+    .eq("role", "patron")
+    .order("full_name", { ascending: true });
+
+  const managers = profiles ?? [];
+  if (managers.length === 0) return [];
+
+  const [{ data: members }, branches] = await Promise.all([
+    supabase
+      .from("branch_members")
+      .select("user_id, branch_id")
+      .in(
+        "user_id",
+        managers.map((m) => m.id),
+      ),
+    getBranchOptions(supabase),
+  ]);
+
+  const branchName = new Map(branches.map((b) => [b.id, b.name]));
+  const namesByUser = new Map<string, string[]>();
+  for (const row of members ?? []) {
+    const name = branchName.get(row.branch_id);
+    if (name) namesByUser.set(row.user_id, [...(namesByUser.get(row.user_id) ?? []), name]);
+  }
+
+  return managers.map((manager) => ({
+    userId: manager.id,
+    fullName: manager.full_name,
+    username: manager.username,
+    active: manager.active,
+    branchNames: namesByUser.get(manager.id) ?? [],
+  }));
 }

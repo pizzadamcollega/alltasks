@@ -43,6 +43,7 @@ export default async function CalisanProfiliPage({
   const supabase = await createClient();
   const employee = await getEmployeeProfile(supabase, employeeId);
   if (!employee) notFound();
+  if (employee.role === "patron") redirect(`/${branchSlug}/calisanlar/yonetici/${employeeId}`);
 
   const today = todayInAmsterdam();
   const currentYm = today.slice(0, 7);
