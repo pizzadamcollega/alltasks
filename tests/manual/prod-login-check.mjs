@@ -3,13 +3,18 @@ import { chromium } from "playwright";
 const BASE = "https://alltasks-mauve.vercel.app";
 const browser = await chromium.launch();
 const page = await browser.newPage();
+page.on("console", (msg) => console.log("[console]", msg.type(), msg.text()));
+page.on("pageerror", (err) => console.log("[pageerror]", err.message));
+page.on("response", (res) => {
+  if (res.status() >= 400) console.log("[http]", res.status(), res.url());
+});
 
 await page.goto(`${BASE}/de-pijp/giris`, { waitUntil: "networkidle" });
 await page.getByLabel("Kullanıcı adı").fill("admin");
 await page.locator("#password").fill("Pizza2026Admin!");
 await page.getByRole("button", { name: "Giriş yap" }).click();
-await page.waitForTimeout(3000);
-await page.waitForLoadState("networkidle");
+await page.waitForTimeout(6000);
+await page.waitForLoadState("networkidle").catch(() => {});
 
 console.log("URL after login:", page.url());
 console.log("Full body text:", (await page.locator("main").innerText().catch(() => page.locator("body").innerText())));

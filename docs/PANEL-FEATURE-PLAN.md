@@ -12,15 +12,17 @@ ARCHITECTURE/DESIGN, it records the decisions and status specific to this featur
 | Supabase project | `fgpjzqybsijlasuoklen`, region ap-northeast-2. Migrations + `seed.sql` applied. |
 | DB connection (local/CI only) | Session pooler, `.env.local`'s `SUPABASE_DB_URL` (D-29) — never set this on Vercel. |
 | GitHub | `https://github.com/pizzadamcollega/alltasks.git`, branch `main`, pushed. |
-| Vercel | `https://alltasks-mauve.vercel.app` — deployed, but **login is broken** there (see below). |
+| Vercel | `https://alltasks-mauve.vercel.app` — deployed, **login confirmed working end-to-end**. |
 | First admin account | username `admin`, password `Pizza2026Admin!` (change it once someone real uses it). |
 
-**Vercel env vars still needed** (Settings → Environment Variables, then redeploy): `STAFF_EMAIL_DOMAIN`,
-`SUPABASE_SERVICE_ROLE_KEY`, `APP_BASE_URL` — same values as `.env.local`. Confirmed missing by
-hitting the live login form and getting "Sunucu yapılandırması eksik" (that string only appears
-when `STAFF_EMAIL_DOMAIN` is unset — see `app/[branch]/giris/actions.ts`). Re-test with
-`node tests/manual/prod-login-check.mjs` after fixing (edit the hardcoded `BASE` URL and
-credentials at the top of that file if they've changed).
+Vercel env vars were initially missing `STAFF_EMAIL_DOMAIN` / `APP_BASE_URL` (login failed with
+"Sunucu yapılandırması eksik" — that string only appears when `STAFF_EMAIL_DOMAIN` is unset, see
+`app/[branch]/giris/actions.ts`). `SUPABASE_SERVICE_ROLE_KEY` etc. were already present from the
+Vercel↔Supabase marketplace integration. **Fixed 2026-10-27**: `vercel link --project alltasks`,
+`vercel env add STAFF_EMAIL_DOMAIN production` / `APP_BASE_URL production`, then
+`vercel --prod` to redeploy. Verified with `node tests/manual/prod-login-check.mjs`: admin login
+→ redirects to `/de-pijp`, real Patron home renders with live (zeroed, since no data yet) Supabase
+stats, 0 console errors. Re-run that script anytime something changes.
 
 ## 1. Framing
 
@@ -108,15 +110,13 @@ migration exactly; nothing here is enforced only in the UI (CLAUDE.md golden rul
    and the **Playwright suite** (`supabase start && npm run db:seed-users && npm run test:e2e`,
    needs the local Supabase stack, i.e. Docker) — both still pending a machine with Docker.
 5. ~~Git: push this repo~~ **Done 2026-10-27**: `https://github.com/pizzadamcollega/alltasks.git`, `main`.
-6. ~~Vercel project: import the repo~~ **Done 2026-10-27**, but incomplete:
-   `https://alltasks-mauve.vercel.app` is live, `NEXT_PUBLIC_SUPABASE_URL` /
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY` are clearly set (the login *page* renders), but
-   `STAFF_EMAIL_DOMAIN` (at least) is missing — login fails with "Sunucu yapılandırması eksik".
-   **Next action**: add `STAFF_EMAIL_DOMAIN`, `SUPABASE_SERVICE_ROLE_KEY`, `APP_BASE_URL` in
-   Vercel → Settings → Environment Variables (same values as `.env.local`), redeploy, re-test with
-   `node tests/manual/prod-login-check.mjs`. **Never** add `SUPABASE_DB_URL` there — it's
-   local/CI-only (D-29). Still on Hobby plan as of this writing — move to Pro before real traffic
-   (D-11; Hobby is non-commercial-use only).
+6. ~~Vercel project: import the repo, fix env vars~~ **Done 2026-10-27**:
+   `https://alltasks-mauve.vercel.app` is live and login works end-to-end (verified with
+   `node tests/manual/prod-login-check.mjs`). Added `STAFF_EMAIL_DOMAIN` + `APP_BASE_URL` via
+   `vercel env add ... production`; `SUPABASE_SERVICE_ROLE_KEY` and the rest were already there
+   from the Vercel↔Supabase integration. **Remaining**: still on Hobby plan — move to Pro before
+   real traffic (D-11; Hobby is non-commercial-use only). **Never** add `SUPABASE_DB_URL` on
+   Vercel — it's local/CI-only (D-29).
 7. Once the above are green, resume at ROADMAP Phase 6 (haftalık program) if/when the owner wants
    the rest of the ERP built.
 

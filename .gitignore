@@ -56,3 +56,5 @@ next-env.d.ts
 
 # manual verification screenshots (throwaway, regenerate with tests/manual/screenshot.mjs)
 /tests/manual/shots/
+
+.vercel
