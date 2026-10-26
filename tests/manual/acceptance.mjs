@@ -193,6 +193,9 @@ const yesterday = (() => { const d = new Date(Date.now() - 864e5); return d.toIS
   await check("time picker sheet passes axe", async () => {
     await page.getByRole("button", { name: /^Bitiş:/ }).click();
     await page.getByRole("dialog").waitFor();
+    // let the slide/fade-in finish; mid-animation opacity reads as low contrast
+    await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== "running"));
+    await page.waitForTimeout(300);
     const r = await new AxeBuilder({ page }).include("[role=dialog]").withTags(["wcag2a", "wcag2aa"]).analyze();
     const bad = r.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
     await page.keyboard.press("Escape");
