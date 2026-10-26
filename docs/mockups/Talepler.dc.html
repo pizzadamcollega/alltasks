@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Taleplerim</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#C2381B}a:hover{color:#9E2C14}
+button,input,textarea{font-family:inherit}
+button{cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; font-family: Inter, system-ui, sans-serif; background: {{c.bg}}; color: {{c.text}}; font-variant-numeric: tabular-nums; overflow: hidden">
+
+  <header style="display: flex; align-items: center; gap: 10px; padding: 16px 16px 8px">
+    <h1 style="flex: 1; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px">Taleplerim</h1>
+    <button onClick="{{toggleTheme}}" aria-label="Temayı değiştir" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; display: flex; align-items: center; justify-content: center">
+      <sc-if value="{{isDark}}" hint-placeholder-val="{{false}}">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+      </sc-if>
+      <sc-if value="{{isLight}}" hint-placeholder-val="{{true}}">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg>
+      </sc-if>
+    </button>
+  </header>
+
+  <div role="tablist" aria-label="Talep türü" style="margin: 0 16px 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 14px; background: {{c.surface2}}">
+    <button role="tab" aria-selected="{{isProgram}}" onClick="{{showProgram}}" style="{{tabProgram}}">Haftalık program</button>
+    <button role="tab" aria-selected="{{isLeave}}" onClick="{{showLeave}}" style="{{tabLeave}}">İzin / tatil</button>
+  </div>
+
+  <main style="flex: 1; overflow-y: auto; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 14px">
+
+    <sc-if value="{{isProgram}}" hint-placeholder-val="{{true}}">
+      <section aria-label="2–8 Kasım talebi" style="background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 14px">
+        <div>
+          <div style="font-size: 16px; font-weight: 700">2–8 Kasım haftası</div>
+          <div style="font-size: 13px; color: {{c.muted}}; margin-top: 4px">Son gün: Perşembe 29 Ekim, 23:59. Yanıt vermezsen şablon geçerli sayılır.</div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px">
+          <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+            <button onClick="{{d.toggle}}" aria-pressed="{{d.on}}" aria-label="{{d.aria}}" style="{{d.style}}">
+              <span style="font-size: 11px; font-weight: 600">{{d.day}}</span>
+              <span style="font-size: 16px; font-weight: 700">{{d.date}}</span>
+              <span style="font-size: 10px; font-weight: 600">{{d.mark}}</span>
+            </button>
+          </sc-for>
+        </div>
+        <div style="font-size: 13px; color: {{c.muted}}">{{summary}}</div>
+        <sc-if value="{{submitted}}" hint-placeholder-val="{{false}}">
+          <div role="status" style="background: {{c.okSoft}}; color: {{c.ok}}; border-radius: 12px; padding: 10px 12px; font-size: 13px; font-weight: 600">{{submittedNote}}</div>
+        </sc-if>
+        <div style="display: flex; gap: 8px">
+          <sc-if value="{{changed}}" hint-placeholder-val="{{false}}">
+            <button onClick="{{reset}}" style="flex: 1; height: 48px; border-radius: 12px; border: 1px solid {{c.border}}; background: transparent; color: {{c.text}}; font-size: 14px; font-weight: 600">Şablona dön</button>
+          </sc-if>
+          <button onClick="{{submit}}" style="flex: 1; height: 48px; border-radius: 12px; border: 0; background: {{c.accent}}; color: {{c.onAccent}}; font-size: 14px; font-weight: 600">{{submitLabel}}</button>
+        </div>
+      </section>
+      <div style="display: flex; gap: 16px; font-size: 12px; color: {{c.muted}}">
+        <span style="display: flex; align-items: center; gap: 6px"><span style="width: 14px; height: 14px; border-radius: 4px; background: {{c.accentSoft}}; border: 1px solid {{c.accent}}"></span>Çalışacağım</span>
+        <span style="display: flex; align-items: center; gap: 6px"><span style="width: 14px; height: 14px; border-radius: 4px; border: 1px dashed {{c.info}}"></span>Şablondan farklı</span>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isLeave}}" hint-placeholder-val="{{false}}">
+      <form style="background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 14px">
+        <div style="font-size: 16px; font-weight: 700">Yeni talep</div>
+        <div role="radiogroup" aria-label="Tür" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+          <button type="button" role="radio" aria-checked="{{isIzin}}" onClick="{{pickIzin}}" style="{{kindIzin}}">İzin</button>
+          <button type="button" role="radio" aria-checked="{{isTatil}}" onClick="{{pickTatil}}" style="{{kindTatil}}">Tatil</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">
+            Başlangıç
+            <input type="date" value="2026-12-14" style="height: 48px; border-radius: 12px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; padding: 0 10px; font-size: 15px">
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">
+            Bitiş
+            <input type="date" value="2026-12-21" style="height: 48px; border-radius: 12px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; padding: 0 10px; font-size: 15px">
+          </label>
+        </div>
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">
+          Not (isteğe bağlı)
+          <textarea rows="3" placeholder="Patronuna iletmek istediğin bir not" style="border-radius: 12px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; padding: 10px 12px; font-size: 15px; resize: none"></textarea>
+        </label>
+        <button type="button" style="height: 48px; border-radius: 12px; border: 0; background: {{c.accent}}; color: {{c.onAccent}}; font-size: 15px; font-weight: 600">Talep gönder</button>
+      </form>
+
+      <section aria-label="Önceki talepler" style="display: flex; flex-direction: column; gap: 10px">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 700">Önceki talepler</h2>
+        <div style="background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 16px; overflow: hidden">
+          <sc-for list="{{history}}" as="h" hint-placeholder-count="3">
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: {{h.divider}}">
+              <div style="flex: 1; min-width: 0">
+                <div style="font-size: 14px; font-weight: 600">{{h.title}}</div>
+                <div style="font-size: 12px; color: {{c.muted}}; margin-top: 2px">{{h.sub}}</div>
+              </div>
+              <span style="{{h.chip}}">{{h.status}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </sc-if>
+  </main>
+
+  <nav aria-label="Ana menü" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid {{c.border}}; background: {{c.surface}}; padding: 6px 8px 14px">
+    <a href="Main.dc.html" style="height: 56px; text-decoration: none; color: {{c.muted}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 500">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>
+      Ana sayfa
+    </a>
+    <a href="Takvim.dc.html" style="height: 56px; text-decoration: none; color: {{c.muted}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 500">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>
+      Takvim
+    </a>
+    <a href="Talepler.dc.html" aria-current="page" style="height: 56px; text-decoration: none; color: {{c.accent}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 600">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H8l-4 4z"></path><path d="M8 9h8M8 12h5"></path></svg>
+      Talepler
+    </a>
+    <a href="Gecmis.dc.html" style="height: 56px; text-decoration: none; color: {{c.muted}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 500">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+      Geçmiş
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+var PALETTES = {
+  light: { bg: '#F6F4F1', surface: '#FFFFFF', surface2: '#F0EDE8', text: '#1C1917', muted: '#665E57', border: '#E4DFD8', accent: '#C2381B', accentSoft: '#FBE9E4', onAccent: '#FFFFFF', ok: '#1E7549', okSoft: '#E3F3EA', warn: '#8F5400', warnSoft: '#FDF0D9', bad: '#B42318', badSoft: '#FDE7E5', info: '#1D5FA8', infoSoft: '#E6EEF9' },
+  dark: { bg: '#141210', surface: '#1E1B18', surface2: '#29251F', text: '#F3EFEA', muted: '#A9A096', border: '#37322B', accent: '#F06A4A', accentSoft: '#3A1F17', onAccent: '#1A0B06', ok: '#5CC98E', okSoft: '#16301F', warn: '#F2B04A', warnSoft: '#33260F', bad: '#F27C6F', badSoft: '#3A1A17', info: '#7FB2F0', infoSoft: '#172739' }
+};
+var DAYS = [
+  { day: 'Pzt', long: 'Pazartesi', date: '2' }, { day: 'Sal', long: 'Salı', date: '3' }, { day: 'Çar', long: 'Çarşamba', date: '4' },
+  { day: 'Per', long: 'Perşembe', date: '5' }, { day: 'Cum', long: 'Cuma', date: '6' }, { day: 'Cmt', long: 'Cumartesi', date: '7' }, { day: 'Paz', long: 'Pazar', date: '8' }
+];
+var TEMPLATE = [true, false, true, false, true, true, true];
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { theme: null, tab: 'program', picks: TEMPLATE.slice(), submitted: null, kind: 'tatil' };
+  }
+  renderVals() {
+    var self = this;
+    var s = this.state;
+    var theme = s.theme || this.props.theme || 'light';
+    var c = PALETTES[theme] || PALETTES.light;
+    var tab = function (on) { return 'height: 44px; border-radius: 10px; border: 0; font-size: 14px; font-weight: 600; ' + (on ? 'background: ' + c.surface + '; color: ' + c.text + '; box-shadow: 0 1px 2px rgba(0,0,0,0.08);' : 'background: transparent; color: ' + c.muted + ';'); };
+    var kind = function (on) { return 'height: 44px; border-radius: 12px; font-size: 14px; font-weight: 600; ' + (on ? 'border: 1.5px solid ' + c.accent + '; background: ' + c.accentSoft + '; color: ' + c.accent + ';' : 'border: 1px solid ' + c.border + '; background: transparent; color: ' + c.text + ';'); };
+    var chip = function (fg, bg) { return 'font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; color: ' + fg + '; background: ' + bg + '; white-space: nowrap'; };
+    var changed = s.picks.some(function (p, i) { return p !== TEMPLATE[i]; });
+    var count = s.picks.filter(Boolean).length;
+    var days = DAYS.map(function (d, i) {
+      var on = s.picks[i];
+      var diff = on !== TEMPLATE[i];
+      var base = 'display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; min-height: 64px; border-radius: 12px; ';
+      var look = on
+        ? 'background: ' + c.accentSoft + '; color: ' + c.text + '; border: ' + (diff ? '1.5px dashed ' + c.info : '1px solid ' + c.accent) + ';'
+        : 'background: transparent; color: ' + c.muted + '; border: ' + (diff ? '1.5px dashed ' + c.info : '1px dashed ' + c.border) + ';';
+      return {
+        day: d.day, date: d.date, on: on, mark: on ? 'Mesai' : 'Boş',
+        aria: d.long + ' ' + d.date + ' Kasım: ' + (on ? 'çalışacağım' : 'çalışmayacağım'),
+        style: base + look,
+        toggle: function () { var p = s.picks.slice(); p[i] = !p[i]; self.setState({ picks: p, submitted: null }); }
+      };
+    });
+    var history = [
+      { title: 'Tatil · 14–21 Aralık', sub: 'Gönderildi 20 Ekim', status: 'Bekliyor', chip: chip(c.warn, c.warnSoft) },
+      { title: 'İzin · 8 Ekim', sub: 'Gönderildi 1 Ekim', status: 'Onaylandı', chip: chip(c.ok, c.okSoft) },
+      { title: 'İzin · 12 Eylül', sub: 'Patron notu: o gün personel yetersiz', status: 'Reddedildi', chip: chip(c.bad, c.badSoft) }
+    ].map(function (h, i) { h.divider = i === 0 ? 'none' : '1px solid ' + c.border; return h; });
+    return {
+      c: c,
+      isDark: theme === 'dark',
+      isLight: theme !== 'dark',
+      isProgram: s.tab === 'program', isLeave: s.tab === 'leave',
+      tabProgram: tab(s.tab === 'program'), tabLeave: tab(s.tab === 'leave'),
+      showProgram: function () { self.setState({ tab: 'program' }); },
+      showLeave: function () { self.setState({ tab: 'leave' }); },
+      days: days,
+      changed: changed,
+      summary: count + ' gün seçili' + (changed ? ' · şablondan farklı, patron onayına gidecek' : ' · şablonla aynı'),
+      submitLabel: changed ? 'Değişikliği gönder' : 'Şablonu onayla',
+      submitted: !!s.submitted,
+      submittedNote: s.submitted === 'change' ? 'Değişiklik gönderildi · patron onayı bekleniyor' : 'Şablon onaylandı',
+      submit: function () { self.setState({ submitted: changed ? 'change' : 'ok' }); },
+      reset: function () { self.setState({ picks: TEMPLATE.slice(), submitted: null }); },
+      isIzin: s.kind === 'izin', isTatil: s.kind === 'tatil',
+      kindIzin: kind(s.kind === 'izin'), kindTatil: kind(s.kind === 'tatil'),
+      pickIzin: function () { self.setState({ kind: 'izin' }); },
+      pickTatil: function () { self.setState({ kind: 'tatil' }); },
+      history: history,
+      toggleTheme: function () { self.setState({ theme: theme === 'dark' ? 'light' : 'dark' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

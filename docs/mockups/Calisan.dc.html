@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Çalışan profili</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#C2381B}a:hover{color:#9E2C14}
+button,input{font-family:inherit}
+button{cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; font-family: Inter, system-ui, sans-serif; background: {{c.bg}}; color: {{c.text}}; font-variant-numeric: tabular-nums; overflow: hidden">
+
+  <header style="display: flex; align-items: center; gap: 8px; padding: 12px 16px 8px">
+    <a href="Patron.dc.html" aria-label="Geri" style="width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: {{c.text}}">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg>
+    </a>
+    <h1 style="flex: 1; margin: 0; font-size: 20px; font-weight: 700">Çalışan profili</h1>
+    <button onClick="{{toggleTheme}}" aria-label="Temayı değiştir" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; display: flex; align-items: center; justify-content: center">
+      <sc-if value="{{isDark}}" hint-placeholder-val="{{false}}">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+      </sc-if>
+      <sc-if value="{{isLight}}" hint-placeholder-val="{{true}}">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg>
+      </sc-if>
+    </button>
+  </header>
+
+  <main style="flex: 1; overflow-y: auto; padding: 4px 16px 24px; display: flex; flex-direction: column; gap: 14px">
+
+    <section aria-label="Kimlik" style="display: flex; align-items: center; gap: 14px">
+      <span style="width: 56px; height: 56px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; background: {{c.accentSoft}}; color: {{c.accent}}; font-size: 18px; font-weight: 700">EK</span>
+      <div style="flex: 1; min-width: 0">
+        <div style="font-size: 20px; font-weight: 700">Elif Kaya</div>
+        <div style="font-size: 13px; color: {{c.muted}}; margin-top: 2px">elif.kaya · başlangıç 3 Mart 2026</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px">
+          <span style="font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: {{c.surface2}}">De Pijp</span>
+          <span style="font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: {{c.surface2}}">Zuid</span>
+          <span style="font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: {{c.okSoft}}; color: {{c.ok}}">Aktif</span>
+        </div>
+      </div>
+    </section>
+
+    <section aria-label="Ekim özeti" style="background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 16px; padding: 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+      <div style="grid-column: span 2; font-size: 13px; font-weight: 600; color: {{c.muted}}">Ekim 2026 · De Pijp</div>
+      <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: {{c.muted}}">Toplam saat</span><span style="font-size: 18px; font-weight: 700">71 sa 20 dk</span></div>
+      <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: {{c.muted}}">Hesaplanan</span><span style="font-size: 18px; font-weight: 700">€891,67</span></div>
+      <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: {{c.muted}}">Avans</span><span style="font-size: 18px; font-weight: 700">€150,00</span></div>
+      <div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 12px; color: {{c.muted}}">Kalan</span><span style="font-size: 18px; font-weight: 700; color: {{c.accent}}">€741,67</span></div>
+    </section>
+
+    <section aria-label="Saatlik ücret" style="background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <div style="flex: 1">
+          <div style="font-size: 13px; font-weight: 600; color: {{c.muted}}">Saatlik ücret</div>
+          <div style="font-size: 22px; font-weight: 700; margin-top: 2px">€12,50</div>
+          <div style="font-size: 12px; color: {{c.muted}}">1 Eylül 2026'dan beri · her iki şubede aynı</div>
+        </div>
+        <button onClick="{{toggleRate}}" style="height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid {{c.border}}; background: transparent; color: {{c.text}}; font-size: 13px; font-weight: 600">{{rateBtn}}</button>
+      </div>
+      <sc-if value="{{rateOpen}}" hint-placeholder-val="{{false}}">
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600">Yeni ücret (€)
+            <input type="number" step="0.05" value="13.00" style="height: 44px; border-radius: 10px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; padding: 0 10px; font-size: 15px">
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600">Geçerlilik tarihi
+            <input type="date" value="2026-11-01" style="height: 44px; border-radius: 10px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; padding: 0 8px; font-size: 15px">
+          </label>
+          <button style="grid-column: span 2; height: 44px; border-radius: 10px; border: 0; background: {{c.accent}}; color: {{c.onAccent}}; font-size: 14px; font-weight: 600">Yeni ücreti kaydet</button>
+          <p style="grid-column: span 2; margin: 0; font-size: 12px; color: {{c.muted}}">Geçmiş günler eski ücretle hesaplanmaya devam eder.</p>
+        </div>
+      </sc-if>
+      <div style="border-top: 1px solid {{c.border}}; padding-top: 10px; display: flex; justify-content: space-between; font-size: 13px; color: {{c.muted}}">
+        <span>3 Mar – 31 Ağu 2026</span><span>€12,00 / saat</span>
+      </div>
+    </section>
+
+    <section aria-label="Ödemeler ve avanslar" style="display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: center; justify-content: space-between">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 700">Ödemeler ve avanslar</h2>
+        <button style="height: 36px; padding: 0 12px; border-radius: 10px; border: 0; background: {{c.accentSoft}}; color: {{c.accent}}; font-size: 13px; font-weight: 600">+ Ekle</button>
+      </div>
+      <div style="background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 16px; overflow: hidden">
+        <sc-for list="{{payments}}" as="p" hint-placeholder-count="2">
+          <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: {{p.divider}}">
+            <div style="flex: 1; min-width: 0">
+              <div style="font-size: 14px; font-weight: 600">{{p.title}}</div>
+              <div style="font-size: 12px; color: {{c.muted}}; margin-top: 2px">{{p.sub}}</div>
+            </div>
+            <button role="switch" aria-checked="{{p.on}}" aria-label="{{p.aria}}" onClick="{{p.toggle}}" style="display: flex; align-items: center; gap: 8px; height: 44px; border: 0; background: transparent; color: {{c.muted}}; font-size: 11px; font-weight: 600; padding: 0">
+              <span>{{p.label}}</span>
+              <span style="{{p.track}}"><span style="{{p.knob}}"></span></span>
+            </button>
+          </div>
+        </sc-for>
+      </div>
+      <p style="margin: 0; font-size: 12px; color: {{c.muted}}">Görünürlüğü kapalı kayıtlar çalışanın ekranında hiç gösterilmez.</p>
+    </section>
+
+    <section aria-label="Hesap" style="display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0; font-size: 16px; font-weight: 700">Hesap</h2>
+      <button style="height: 48px; border-radius: 12px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; font-size: 14px; font-weight: 600">Şifreyi sıfırla</button>
+      <button style="height: 48px; border-radius: 12px; border: 1px solid {{c.bad}}; background: transparent; color: {{c.bad}}; font-size: 14px; font-weight: 600">Hesabı pasife al</button>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+var PALETTES = {
+  light: { bg: '#F6F4F1', surface: '#FFFFFF', surface2: '#F0EDE8', text: '#1C1917', muted: '#665E57', border: '#E4DFD8', accent: '#C2381B', accentSoft: '#FBE9E4', onAccent: '#FFFFFF', ok: '#1E7549', okSoft: '#E3F3EA', bad: '#B42318', switchOff: '#C9C2B9' },
+  dark: { bg: '#141210', surface: '#1E1B18', surface2: '#29251F', text: '#F3EFEA', muted: '#A9A096', border: '#37322B', accent: '#F06A4A', accentSoft: '#3A1F17', onAccent: '#1A0B06', ok: '#5CC98E', okSoft: '#16301F', bad: '#F27C6F', switchOff: '#4A443C' }
+};
+var PAYMENTS = [
+  { id: 'adv', title: 'Avans · €150,00', sub: '10 Ekim 2026 · Ekim maaşından düşülür' },
+  { id: 'sep', title: 'Eylül maaşı · €1.017,25', sub: 'Ödendi 5 Ekim 2026' }
+];
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { theme: null, rateOpen: false, visible: { adv: true, sep: false } };
+  }
+  renderVals() {
+    var self = this;
+    var s = this.state;
+    var theme = s.theme || this.props.theme || 'light';
+    var c = PALETTES[theme] || PALETTES.light;
+    var payments = PAYMENTS.map(function (p, i) {
+      var on = !!s.visible[p.id];
+      return {
+        title: p.title, sub: p.sub, on: on,
+        label: on ? 'Görünür' : 'Gizli',
+        aria: 'Çalışana görünür: ' + p.title,
+        divider: i === 0 ? 'none' : '1px solid ' + c.border,
+        track: 'width: 44px; height: 26px; border-radius: 999px; position: relative; flex: none; background: ' + (on ? c.accent : c.switchOff) + ';',
+        knob: 'position: absolute; top: 3px; left: ' + (on ? 21 : 3) + 'px; width: 20px; height: 20px; border-radius: 50%; background: #FFFFFF;',
+        toggle: function () { var v = Object.assign({}, s.visible); v[p.id] = !v[p.id]; self.setState({ visible: v }); }
+      };
+    });
+    return {
+      c: c,
+      isDark: theme === 'dark',
+      isLight: theme !== 'dark',
+      rateOpen: s.rateOpen,
+      rateBtn: s.rateOpen ? 'Vazgeç' : 'Ücreti değiştir',
+      toggleRate: function () { self.setState({ rateOpen: !s.rateOpen }); },
+      payments: payments,
+      toggleTheme: function () { self.setState({ theme: theme === 'dark' ? 'light' : 'dark' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

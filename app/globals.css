@@ -1,0 +1,202 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Pizzadam design tokens (docs/DESIGN.md §2).
+ * Brand red (--pz-accent) is sampled from the pizza slice logo (pizza.svg, #be1e2d).
+ * Dark-mode values are lightened for contrast, not re-sampled — verify contrast
+ * with a checker before shipping if the brand owner supplies an official dark tint.
+ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Pizzadam semantic tokens, exposed as Tailwind utilities (bg-pz-accent, text-pz-muted, ...) */
+  --color-pz-bg: var(--pz-bg);
+  --color-pz-surface: var(--pz-surface);
+  --color-pz-surface-2: var(--pz-surface-2);
+  --color-pz-text: var(--pz-text);
+  --color-pz-muted: var(--pz-muted);
+  --color-pz-border: var(--pz-border);
+  --color-pz-accent: var(--pz-accent);
+  --color-pz-accent-soft: var(--pz-accent-soft);
+  --color-pz-on-accent: var(--pz-on-accent);
+  --color-pz-ok: var(--pz-ok);
+  --color-pz-ok-soft: var(--pz-ok-soft);
+  --color-pz-warn: var(--pz-warn);
+  --color-pz-warn-soft: var(--pz-warn-soft);
+  --color-pz-bad: var(--pz-bad);
+  --color-pz-bad-soft: var(--pz-bad-soft);
+  --color-pz-info: var(--pz-info);
+  --color-pz-info-soft: var(--pz-info-soft);
+  --color-pz-on-info: var(--pz-on-info);
+  --color-pz-switch-off: var(--pz-switch-off);
+  --radius-card: 1rem; /* 16px */
+  --radius-chip: 999px;
+  --radius-sheet: 1.375rem; /* 22px */
+}
+
+:root {
+  /* Pizzadam palette — light */
+  --pz-bg: #f6f4f1;
+  --pz-surface: #ffffff;
+  --pz-surface-2: #f0ede8;
+  --pz-text: #1c1917;
+  --pz-muted: #665e57;
+  --pz-border: #e4dfd8;
+  --pz-accent: #be1e2d;
+  --pz-accent-soft: #fbe8e9;
+  --pz-on-accent: #ffffff;
+  --pz-ok: #1e7549;
+  --pz-ok-soft: #e3f3ea;
+  --pz-warn: #8f5400;
+  --pz-warn-soft: #fdf0d9;
+  --pz-bad: #b42318;
+  --pz-bad-soft: #fde7e5;
+  --pz-info: #1d5fa8;
+  --pz-info-soft: #e6eef9;
+  --pz-on-info: #ffffff;
+  --pz-switch-off: #c9c2b9;
+
+  /* shadcn primitives mapped onto the Pizzadam palette */
+  --background: var(--pz-bg);
+  --foreground: var(--pz-text);
+  --card: var(--pz-surface);
+  --card-foreground: var(--pz-text);
+  --popover: var(--pz-surface);
+  --popover-foreground: var(--pz-text);
+  --primary: var(--pz-accent);
+  --primary-foreground: var(--pz-on-accent);
+  --secondary: var(--pz-surface-2);
+  --secondary-foreground: var(--pz-text);
+  --muted: var(--pz-surface-2);
+  --muted-foreground: var(--pz-muted);
+  --accent: var(--pz-accent-soft);
+  --accent-foreground: var(--pz-accent);
+  --destructive: var(--pz-bad);
+  --border: var(--pz-border);
+  --input: var(--pz-border);
+  --ring: var(--pz-accent);
+  --chart-1: var(--pz-accent);
+  --chart-2: var(--pz-info);
+  --chart-3: var(--pz-ok);
+  --chart-4: var(--pz-warn);
+  --chart-5: var(--pz-muted);
+  --radius: 0.75rem; /* 12px — buttons/inputs */
+  --sidebar: var(--pz-surface);
+  --sidebar-foreground: var(--pz-text);
+  --sidebar-primary: var(--pz-accent);
+  --sidebar-primary-foreground: var(--pz-on-accent);
+  --sidebar-accent: var(--pz-accent-soft);
+  --sidebar-accent-foreground: var(--pz-accent);
+  --sidebar-border: var(--pz-border);
+  --sidebar-ring: var(--pz-accent);
+}
+
+.dark {
+  /* Pizzadam palette — dark */
+  --pz-bg: #141210;
+  --pz-surface: #1e1b18;
+  --pz-surface-2: #29251f;
+  --pz-text: #f3efea;
+  --pz-muted: #a9a096;
+  --pz-border: #37322b;
+  --pz-accent: #eb4a5b;
+  --pz-accent-soft: #3a1419;
+  --pz-on-accent: #23090c;
+  --pz-ok: #5cc98e;
+  --pz-ok-soft: #16301f;
+  --pz-warn: #f2b04a;
+  --pz-warn-soft: #33260f;
+  --pz-bad: #f27c6f;
+  --pz-bad-soft: #3a1a17;
+  --pz-info: #7fb2f0;
+  --pz-info-soft: #172739;
+  --pz-on-info: #0b1626;
+  --pz-switch-off: #4a443c;
+
+  --background: var(--pz-bg);
+  --foreground: var(--pz-text);
+  --card: var(--pz-surface);
+  --card-foreground: var(--pz-text);
+  --popover: var(--pz-surface);
+  --popover-foreground: var(--pz-text);
+  --primary: var(--pz-accent);
+  --primary-foreground: var(--pz-on-accent);
+  --secondary: var(--pz-surface-2);
+  --secondary-foreground: var(--pz-text);
+  --muted: var(--pz-surface-2);
+  --muted-foreground: var(--pz-muted);
+  --accent: var(--pz-accent-soft);
+  --accent-foreground: var(--pz-accent);
+  --destructive: var(--pz-bad);
+  --border: var(--pz-border);
+  --input: var(--pz-border);
+  --ring: var(--pz-accent);
+  --chart-1: var(--pz-accent);
+  --chart-2: var(--pz-info);
+  --chart-3: var(--pz-ok);
+  --chart-4: var(--pz-warn);
+  --chart-5: var(--pz-muted);
+  --sidebar: var(--pz-surface);
+  --sidebar-foreground: var(--pz-text);
+  --sidebar-primary: var(--pz-accent);
+  --sidebar-primary-foreground: var(--pz-on-accent);
+  --sidebar-accent: var(--pz-accent-soft);
+  --sidebar-accent-foreground: var(--pz-accent);
+  --sidebar-border: var(--pz-border);
+  --sidebar-ring: var(--pz-accent);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}

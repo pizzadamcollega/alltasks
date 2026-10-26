@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Ekip programı</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#C2381B}a:hover{color:#9E2C14}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; font-family: Inter, system-ui, sans-serif; background: {{c.bg}}; color: {{c.text}}; font-variant-numeric: tabular-nums; overflow: hidden; position: relative">
+
+  <header style="display: flex; align-items: center; gap: 10px; padding: 16px 16px 8px">
+    <h1 style="flex: 1; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px">Ekip programı</h1>
+    <button onClick="{{toggleTheme}}" aria-label="Temayı değiştir" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; display: flex; align-items: center; justify-content: center">
+      <sc-if value="{{isDark}}" hint-placeholder-val="{{false}}">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+      </sc-if>
+      <sc-if value="{{isLight}}" hint-placeholder-val="{{true}}">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg>
+      </sc-if>
+    </button>
+  </header>
+
+  <div role="tablist" aria-label="Hafta" style="margin: 0 16px 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 14px; background: {{c.surface2}}">
+    <button role="tab" aria-selected="{{isThis}}" onClick="{{showThis}}" style="{{tabThis}}">Bu hafta · 19–25 Eki</button>
+    <button role="tab" aria-selected="{{isNext}}" onClick="{{showNext}}" style="{{tabNext}}">Gelecek · 26 Eki–1 Kas</button>
+  </div>
+
+  <main style="flex: 1; overflow-y: auto; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 10px">
+    <sc-if value="{{hasSent}}" hint-placeholder-val="{{false}}">
+      <div role="status" style="background: {{c.infoSoft}}; color: {{c.text}}; border-radius: 14px; padding: 12px 14px; font-size: 13px; line-height: 1.45">{{sentNote}}</div>
+    </sc-if>
+    <p style="margin: 0; font-size: 12px; color: {{c.muted}}">Program kilitli. Kendi gününü bir arkadaşına devredebilirsin; kabul ederse program güncellenir ve patrona bildirim gider.</p>
+
+    <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+      <article style="{{d.card}}">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span style="font-size: 15px; font-weight: 700">{{d.day}}</span>
+          <span style="font-size: 13px; color: {{c.muted}}">{{d.date}}</span>
+          <sc-if value="{{d.canSwap}}" hint-placeholder-val="{{false}}">
+            <button onClick="{{d.open}}" style="margin-left: auto; height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid {{c.border}}; background: transparent; color: {{c.text}}; font-size: 13px; font-weight: 600">Günü devret</button>
+          </sc-if>
+          <sc-if value="{{d.pending}}" hint-placeholder-val="{{false}}">
+            <span style="margin-left: auto; font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 999px; color: {{c.warn}}; background: {{c.warnSoft}}">Yanıt bekleniyor</span>
+          </sc-if>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px">
+          <sc-for list="{{d.people}}" as="p" hint-placeholder-count="4">
+            <span style="{{p.style}}">{{p.name}}</span>
+          </sc-for>
+        </div>
+      </article>
+    </sc-for>
+  </main>
+
+  <nav aria-label="Ana menü" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid {{c.border}}; background: {{c.surface}}; padding: 6px 8px 14px">
+    <a href="Main.dc.html" style="height: 56px; text-decoration: none; color: {{c.muted}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 500">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>
+      Ana sayfa
+    </a>
+    <a href="Takvim.dc.html" aria-current="page" style="height: 56px; text-decoration: none; color: {{c.accent}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 600">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>
+      Takvim
+    </a>
+    <a href="Talepler.dc.html" style="height: 56px; text-decoration: none; color: {{c.muted}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 500">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H8l-4 4z"></path><path d="M8 9h8M8 12h5"></path></svg>
+      Talepler
+    </a>
+    <a href="Gecmis.dc.html" style="height: 56px; text-decoration: none; color: {{c.muted}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 500">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+      Geçmiş
+    </a>
+  </nav>
+
+  <sc-if value="{{sheetOpen}}" hint-placeholder-val="{{false}}">
+    <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.45); display: flex; flex-direction: column; justify-content: flex-end">
+      <section role="dialog" aria-label="Günü devret" style="background: {{c.surface}}; border-radius: 22px 22px 0 0; padding: 20px 16px 24px; display: flex; flex-direction: column; gap: 14px">
+        <div>
+          <div style="font-size: 18px; font-weight: 700">{{sheetTitle}}</div>
+          <div style="font-size: 13px; color: {{c.muted}}; margin-top: 4px">O gün programda olmayan arkadaşların listeleniyor.</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <sc-for list="{{candidates}}" as="o" hint-placeholder-count="3">
+            <button onClick="{{o.pick}}" style="{{o.style}}">
+              <span style="width: 20px; height: 20px; border-radius: 50%; flex: none; box-sizing: border-box; border: {{o.ring}}"></span>
+              <span style="font-size: 15px; font-weight: 600">{{o.name}}</span>
+            </button>
+          </sc-for>
+        </div>
+        <div style="display: flex; gap: 8px">
+          <button onClick="{{close}}" style="flex: 1; height: 48px; border-radius: 12px; border: 1px solid {{c.border}}; background: transparent; color: {{c.text}}; font-size: 15px; font-weight: 600">Vazgeç</button>
+          <button onClick="{{send}}" style="flex: 1; height: 48px; border-radius: 12px; border: 0; background: {{c.accent}}; color: {{c.onAccent}}; font-size: 15px; font-weight: 600">Talep gönder</button>
+        </div>
+      </section>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+var PALETTES = {
+  light: { bg: '#F6F4F1', surface: '#FFFFFF', surface2: '#F0EDE8', text: '#1C1917', muted: '#665E57', border: '#E4DFD8', accent: '#C2381B', accentSoft: '#FBE9E4', onAccent: '#FFFFFF', warn: '#8F5400', warnSoft: '#FDF0D9', info: '#1D5FA8', infoSoft: '#E6EEF9' },
+  dark: { bg: '#141210', surface: '#1E1B18', surface2: '#29251F', text: '#F3EFEA', muted: '#A9A096', border: '#37322B', accent: '#F06A4A', accentSoft: '#3A1F17', onAccent: '#1A0B06', warn: '#F2B04A', warnSoft: '#33260F', info: '#7FB2F0', infoSoft: '#172739' }
+};
+var TEAM = ['Ahmet', 'Elif', 'Murat', 'Can', 'Sena', 'Deniz'];
+var WEEKS = {
+  this: [
+    { day: 'Pazartesi', date: '19 Ekim', people: ['Ahmet', 'Elif', 'Murat', 'Can'] },
+    { day: 'Salı', date: '20 Ekim', people: ['Elif', 'Murat', 'Sena', 'Deniz'] },
+    { day: 'Çarşamba', date: '21 Ekim', people: ['Ahmet', 'Can', 'Sena', 'Deniz'] },
+    { day: 'Perşembe', date: '22 Ekim', people: ['Elif', 'Murat', 'Can', 'Sena'] },
+    { day: 'Cuma', date: '23 Ekim', people: ['Ahmet', 'Elif', 'Murat', 'Can', 'Sena', 'Deniz'] },
+    { day: 'Cumartesi', date: '24 Ekim', people: ['Ahmet', 'Elif', 'Murat', 'Can', 'Sena'] },
+    { day: 'Pazar', date: '25 Ekim', people: ['Ahmet', 'Elif', 'Murat', 'Sena'], today: true }
+  ],
+  next: [
+    { day: 'Pazartesi', date: '26 Ekim', people: ['Ahmet', 'Elif', 'Murat', 'Can'] },
+    { day: 'Salı', date: '27 Ekim', people: ['Murat', 'Sena', 'Deniz', 'Can'] },
+    { day: 'Çarşamba', date: '28 Ekim', people: ['Ahmet', 'Can', 'Sena', 'Deniz'] },
+    { day: 'Perşembe', date: '29 Ekim', people: ['Elif', 'Murat', 'Can', 'Sena'] },
+    { day: 'Cuma', date: '30 Ekim', people: ['Ahmet', 'Elif', 'Murat', 'Can', 'Deniz'] },
+    { day: 'Cumartesi', date: '31 Ekim', people: ['Ahmet', 'Elif', 'Murat', 'Can', 'Sena', 'Deniz'] },
+    { day: 'Pazar', date: '1 Kasım', people: ['Elif', 'Murat', 'Sena', 'Deniz'] }
+  ]
+};
+var ME = 'Ahmet';
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { theme: null, week: 'next', sheet: null, picked: null, sent: {} };
+  }
+  renderVals() {
+    var self = this;
+    var s = this.state;
+    var theme = s.theme || this.props.theme || 'light';
+    var c = PALETTES[theme] || PALETTES.light;
+    var tab = function (on) { return 'height: 44px; border-radius: 10px; border: 0; font-size: 13px; font-weight: 600; ' + (on ? 'background: ' + c.surface + '; color: ' + c.text + '; box-shadow: 0 1px 2px rgba(0,0,0,0.08);' : 'background: transparent; color: ' + c.muted + ';'); };
+    var list = WEEKS[s.week];
+    var days = list.map(function (d, i) {
+      var key = s.week + i;
+      var mine = d.people.indexOf(ME) >= 0;
+      var pending = !!s.sent[key];
+      return {
+        day: d.day + (d.today ? ' · bugün' : ''), date: d.date,
+        canSwap: s.week === 'next' && mine && !pending,
+        pending: pending,
+        card: 'background: ' + c.surface + '; border: 1px solid ' + (mine ? c.accent : c.border) + '; border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;',
+        people: d.people.map(function (n) {
+          var me = n === ME;
+          return { name: me ? 'Sen' : n, style: 'height: 30px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 999px; font-size: 13px; font-weight: ' + (me ? 700 : 500) + '; ' + (me ? 'background: ' + c.accent + '; color: ' + c.onAccent + ';' : 'background: ' + c.surface2 + '; color: ' + c.text + ';') };
+        }),
+        open: function () { self.setState({ sheet: i, picked: null }); }
+      };
+    });
+    var sheetDay = s.sheet === null ? null : list[s.sheet];
+    var candidates = sheetDay ? TEAM.filter(function (n) { return sheetDay.people.indexOf(n) < 0; }).map(function (n) {
+      var on = s.picked === n;
+      return {
+        name: n,
+        ring: on ? '6px solid ' + c.accent : '2px solid ' + c.border,
+        style: 'height: 52px; display: flex; align-items: center; gap: 12px; padding: 0 14px; border-radius: 12px; text-align: left; color: ' + c.text + '; background: ' + (on ? c.accentSoft : c.surface2) + '; border: 1px solid ' + (on ? c.accent : 'transparent') + ';',
+        pick: function () { self.setState({ picked: n }); }
+      };
+    }) : [];
+    var sentKeys = Object.keys(s.sent);
+    var last = sentKeys.length ? s.sent[sentKeys[sentKeys.length - 1]] : null;
+    return {
+      c: c,
+      isDark: theme === 'dark',
+      isLight: theme !== 'dark',
+      isThis: s.week === 'this', isNext: s.week === 'next',
+      tabThis: tab(s.week === 'this'), tabNext: tab(s.week === 'next'),
+      showThis: function () { self.setState({ week: 'this' }); },
+      showNext: function () { self.setState({ week: 'next' }); },
+      days: days,
+      hasSent: !!last,
+      sentNote: last ? last.day + ' için talep ' + last.to + '’a gönderildi. Kabul ederse program güncellenir ve patrona bildirim gider.' : '',
+      sheetOpen: !!sheetDay,
+      sheetTitle: sheetDay ? sheetDay.day + ' ' + sheetDay.date + ' kime devredilsin?' : '',
+      candidates: candidates,
+      close: function () { self.setState({ sheet: null }); },
+      send: function () {
+        if (!s.picked) return;
+        var next = Object.assign({}, s.sent);
+        next[s.week + s.sheet] = { day: sheetDay.day + ' ' + sheetDay.date, to: s.picked };
+        self.setState({ sent: next, sheet: null, picked: null });
+      },
+      toggleTheme: function () { self.setState({ theme: theme === 'dark' ? 'light' : 'dark' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

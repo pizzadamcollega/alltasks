@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Çalışan ana sayfa</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#C2381B}a:hover{color:#9E2C14}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; font-family: Inter, system-ui, sans-serif; background: {{c.bg}}; color: {{c.text}}; font-variant-numeric: tabular-nums; overflow: hidden">
+
+  <header style="display: flex; align-items: flex-start; gap: 10px; padding: 16px 16px 8px">
+    <section aria-label="Mesai" style="flex: 1; background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: {{statusDot}}"></span>
+        <span style="font-size: 12px; font-weight: 600; color: {{c.muted}}">{{statusLabel}}</span>
+        <span style="margin-left: auto; font-size: 12px; font-weight: 500; color: {{c.muted}}">De Pijp</span>
+      </div>
+      <div style="font-size: 30px; font-weight: 700; letter-spacing: -0.5px; line-height: 1">{{elapsed}}</div>
+      <div style="display: flex; gap: 8px">
+        <sc-if value="{{isIdle}}" hint-placeholder-val="{{false}}">
+          <button onClick="{{start}}" style="flex: 1; height: 44px; border: 0; border-radius: 12px; background: {{c.accent}}; color: {{c.onAccent}}; font-size: 15px; font-weight: 600">Başla</button>
+        </sc-if>
+        <sc-if value="{{isRunning}}" hint-placeholder-val="{{true}}">
+          <button onClick="{{stop}}" style="flex: 1; height: 44px; border: 0; border-radius: 12px; background: {{c.accent}}; color: {{c.onAccent}}; font-size: 15px; font-weight: 600">Bitir</button>
+        </sc-if>
+      </div>
+    </section>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <button onClick="{{toggleTheme}}" aria-label="Temayı değiştir" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; display: flex; align-items: center; justify-content: center">
+        <sc-if value="{{isDark}}" hint-placeholder-val="{{false}}">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+        </sc-if>
+        <sc-if value="{{isLight}}" hint-placeholder-val="{{true}}">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg>
+        </sc-if>
+      </button>
+      <button aria-label="Profil" style="width: 44px; height: 44px; border-radius: 50%; border: 0; background: {{c.accentSoft}}; color: {{c.accent}}; font-size: 15px; font-weight: 700">AY</button>
+    </div>
+  </header>
+
+  <main style="flex: 1; overflow-y: auto; padding: 8px 16px 16px; display: flex; flex-direction: column; gap: 16px">
+
+    <div>
+      <h1 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px">Merhaba, Ahmet</h1>
+      <p style="margin: 4px 0 0; font-size: 14px; color: {{c.muted}}">Pazar 25 Ekim · Bugün programdasın</p>
+    </div>
+
+    <section aria-label="Kazanç" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <div style="grid-column: span 2; background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 13px; font-weight: 600; color: {{c.muted}}">Ekim kazancım</span>
+        <span style="font-size: 32px; font-weight: 700; letter-spacing: -0.6px">€812,50</span>
+        <span style="font-size: 13px; color: {{c.muted}}">62 sa 30 dk · 8 sa 35 dk onay bekliyor</span>
+      </div>
+      <div style="background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 13px; font-weight: 600; color: {{c.muted}}">Bugün</span>
+        <span style="font-size: 20px; font-weight: 700">€29,25</span>
+        <span style="font-size: 12px; color: {{c.muted}}">2 sa 15 dk · tahmini</span>
+      </div>
+      <div style="background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 13px; font-weight: 600; color: {{c.muted}}">Bu hafta</span>
+        <span style="font-size: 20px; font-weight: 700">€427,92</span>
+        <span style="font-size: 12px; color: {{c.muted}}">32 sa 55 dk</span>
+      </div>
+    </section>
+
+    <section aria-label="Şablon talebi" style="background: {{c.infoSoft}}; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; gap: 10px; align-items: flex-start">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{c.info}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex: none; margin-top: 1px"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>
+        <div>
+          <div style="font-size: 14px; font-weight: 600; color: {{c.text}}">Gelecek haftanın şablonu hazır</div>
+          <div style="font-size: 13px; color: {{c.muted}}; margin-top: 2px">2–8 Kasım · Perşembe 23:59'a kadar yanıtla. Yanıt vermezsen şablon geçerli sayılır.</div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px">
+        <button style="flex: 1; height: 44px; border: 0; border-radius: 12px; background: {{c.info}}; color: {{c.onInfo}}; font-size: 14px; font-weight: 600">Şablonu onayla</button>
+        <button style="flex: 1; height: 44px; border: 1px solid {{c.info}}; border-radius: 12px; background: transparent; color: {{c.info}}; font-size: 14px; font-weight: 600">Günleri değiştir</button>
+      </div>
+    </section>
+
+    <section aria-label="Bu haftaki programım" style="display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: baseline; justify-content: space-between">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 700">Bu haftaki programım</h2>
+        <a href="#" style="font-size: 13px; font-weight: 600; color: {{c.accent}}; text-decoration: none">Ekip programı</a>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px">
+        <sc-for list="{{week}}" as="d" hint-placeholder-count="7">
+          <div style="{{d.style}}">
+            <span style="font-size: 11px; font-weight: 600">{{d.day}}</span>
+            <span style="font-size: 16px; font-weight: 700">{{d.date}}</span>
+            <span style="font-size: 10px; font-weight: 500">{{d.mark}}</span>
+          </div>
+        </sc-for>
+      </div>
+      <p style="margin: 0; font-size: 12px; color: {{c.muted}}">5 gün çalışıyorsun · Salı ve Perşembe izinli</p>
+    </section>
+
+    <section aria-label="Son kayıtlar" style="display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: baseline; justify-content: space-between">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 700">Son kayıtlar</h2>
+        <a href="#" style="font-size: 13px; font-weight: 600; color: {{c.accent}}; text-decoration: none">Tümü</a>
+      </div>
+      <div style="background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 16px; overflow: hidden">
+        <sc-for list="{{entries}}" as="e" hint-placeholder-count="3">
+          <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: {{e.divider}}">
+            <div style="flex: 1; min-width: 0">
+              <div style="font-size: 14px; font-weight: 600">{{e.date}}</div>
+              <div style="font-size: 13px; color: {{c.muted}}; margin-top: 2px">{{e.time}} · {{e.dur}}</div>
+            </div>
+            <sc-if value="{{e.edited}}" hint-placeholder-val="{{false}}">
+              <span style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; border: 1px solid {{c.border}}; color: {{c.muted}}">Düzenlendi</span>
+            </sc-if>
+            <span style="{{e.chip}}">{{e.status}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </main>
+
+  <nav aria-label="Ana menü" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid {{c.border}}; background: {{c.surface}}; padding: 6px 8px 14px">
+    <button aria-current="page" style="height: 56px; border: 0; background: transparent; color: {{c.accent}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 600">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>
+      Ana sayfa
+    </button>
+    <a href="Takvim.dc.html" style="height: 56px; text-decoration: none; color: {{c.muted}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 500">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>
+      Takvim
+    </a>
+    <a href="Talepler.dc.html" style="height: 56px; text-decoration: none; color: {{c.muted}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 500">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H8l-4 4z"></path><path d="M8 9h8M8 12h5"></path></svg>
+      Talepler
+    </a>
+    <a href="Gecmis.dc.html" style="height: 56px; text-decoration: none; color: {{c.muted}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 500">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+      Geçmiş
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+var PALETTES = {
+  light: { bg: '#F6F4F1', surface: '#FFFFFF', surface2: '#F0EDE8', text: '#1C1917', muted: '#665E57', border: '#E4DFD8', accent: '#C2381B', accentSoft: '#FBE9E4', onAccent: '#FFFFFF', ok: '#1E7549', okSoft: '#E3F3EA', warn: '#8F5400', warnSoft: '#FDF0D9', bad: '#B42318', badSoft: '#FDE7E5', info: '#1D5FA8', infoSoft: '#E6EEF9', onInfo: '#FFFFFF' },
+  dark: { bg: '#141210', surface: '#1E1B18', surface2: '#29251F', text: '#F3EFEA', muted: '#A9A096', border: '#37322B', accent: '#F06A4A', accentSoft: '#3A1F17', onAccent: '#1A0B06', ok: '#5CC98E', okSoft: '#16301F', warn: '#F2B04A', warnSoft: '#33260F', bad: '#F27C6F', badSoft: '#3A1A17', info: '#7FB2F0', infoSoft: '#172739', onInfo: '#0B1626' }
+};
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { status: 'running', base: 8100, startedAt: Date.now(), theme: null };
+  }
+  componentDidMount() {
+    this.timer = setInterval(() => this.forceUpdate(), 1000);
+  }
+  componentWillUnmount() {
+    clearInterval(this.timer);
+  }
+  seconds() {
+    var s = this.state;
+    return s.base + (s.status === 'running' && s.startedAt ? Math.floor((Date.now() - s.startedAt) / 1000) : 0);
+  }
+  renderVals() {
+    var theme = this.state.theme || this.props.theme || 'light';
+    var c = PALETTES[theme] || PALETTES.light;
+    var t = this.seconds();
+    var pad = function (n) { return String(n).padStart(2, '0'); };
+    var elapsed = pad(Math.floor(t / 3600)) + ':' + pad(Math.floor((t % 3600) / 60)) + ':' + pad(t % 60);
+    var st = this.state.status;
+    var labels = { running: 'Mesaide · 16:55’ten beri', idle: 'Mesai bitti · onay bekliyor' };
+    var dots = { running: c.ok, idle: c.muted };
+    var days = [
+      { day: 'Pzt', date: '19', work: true }, { day: 'Sal', date: '20', work: false },
+      { day: 'Çar', date: '21', work: true }, { day: 'Per', date: '22', work: false },
+      { day: 'Cum', date: '23', work: true }, { day: 'Cmt', date: '24', work: true },
+      { day: 'Paz', date: '25', work: true, today: true }
+    ];
+    var week = days.map(function (d) {
+      var base = 'display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; border-radius: 12px; ';
+      var style = d.today
+        ? base + 'background: ' + c.accent + '; color: ' + c.onAccent + ';'
+        : d.work
+          ? base + 'background: ' + c.accentSoft + '; color: ' + c.text + ';'
+          : base + 'background: transparent; color: ' + c.muted + '; border: 1px dashed ' + c.border + ';';
+      return { day: d.day, date: d.date, mark: d.today ? 'Bugün' : (d.work ? 'Mesai' : 'İzin'), style: style };
+    });
+    var chip = function (fg, bg) { return 'font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; color: ' + fg + '; background: ' + bg + '; white-space: nowrap'; };
+    var entries = [
+      { date: 'Cumartesi 24 Ekim', time: '16:55 – 01:30', dur: '8 sa 35 dk', status: 'Bekliyor', chip: chip(c.warn, c.warnSoft), edited: false },
+      { date: 'Cuma 23 Ekim', time: '17:00 – 02:05', dur: '9 sa 05 dk', status: 'Onaylandı', chip: chip(c.ok, c.okSoft), edited: true },
+      { date: 'Çarşamba 21 Ekim', time: '16:00 – 23:00', dur: '7 sa 00 dk', status: 'Onaylandı', chip: chip(c.ok, c.okSoft), edited: false }
+    ].map(function (e, i) { e.divider = i === 0 ? 'none' : '1px solid ' + c.border; return e; });
+    var self = this;
+    return {
+      c: c,
+      isDark: theme === 'dark',
+      isLight: theme !== 'dark',
+      elapsed: elapsed,
+      statusLabel: labels[st],
+      statusDot: dots[st],
+      isIdle: st === 'idle',
+      isRunning: st === 'running',
+      week: week,
+      entries: entries,
+      start: function () { self.setState({ status: 'running', startedAt: Date.now(), base: 0 }); },
+      stop: function () { self.setState({ status: 'idle', base: self.seconds(), startedAt: null }); },
+      toggleTheme: function () { self.setState({ theme: theme === 'dark' ? 'light' : 'dark' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

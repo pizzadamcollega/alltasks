@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Gün sonu onayı</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#C2381B}a:hover{color:#9E2C14}
+button,input{font-family:inherit}
+button{cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; font-family: Inter, system-ui, sans-serif; background: {{c.bg}}; color: {{c.text}}; font-variant-numeric: tabular-nums; overflow: hidden">
+
+  <header style="display: flex; align-items: center; gap: 8px; padding: 12px 16px 8px">
+    <a href="Patron.dc.html" aria-label="Ana sayfaya dön" style="width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: {{c.text}}">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg>
+    </a>
+    <h1 style="flex: 1; margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.2px">Gün sonu onayı</h1>
+    <button onClick="{{toggleTheme}}" aria-label="Temayı değiştir" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; display: flex; align-items: center; justify-content: center">
+      <sc-if value="{{isDark}}" hint-placeholder-val="{{false}}">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+      </sc-if>
+      <sc-if value="{{isLight}}" hint-placeholder-val="{{true}}">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg>
+      </sc-if>
+    </button>
+  </header>
+
+  <div style="display: flex; align-items: center; gap: 8px; padding: 0 16px 12px">
+    <button aria-label="Önceki gün" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; display: flex; align-items: center; justify-content: center">
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg>
+    </button>
+    <div style="flex: 1; height: 44px; border-radius: 12px; background: {{c.surface}}; border: 1px solid {{c.border}}; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600">Cumartesi 24 Ekim</div>
+    <button aria-label="Sonraki gün" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; display: flex; align-items: center; justify-content: center">
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>
+    </button>
+  </div>
+
+  <main style="flex: 1; overflow-y: auto; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 12px">
+
+    <section aria-label="Günün özeti" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+      <div style="background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 2px">
+        <span style="font-size: 12px; font-weight: 600; color: {{c.muted}}">Onaylanan</span>
+        <span style="font-size: 18px; font-weight: 700">{{doneCount}} / 5</span>
+      </div>
+      <div style="background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 2px">
+        <span style="font-size: 12px; font-weight: 600; color: {{c.muted}}">Toplam saat</span>
+        <span style="font-size: 18px; font-weight: 700">32 sa 55 dk</span>
+      </div>
+      <div style="background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 2px">
+        <span style="font-size: 12px; font-weight: 600; color: {{c.muted}}">Gider</span>
+        <span style="font-size: 18px; font-weight: 700">€435,25</span>
+      </div>
+    </section>
+    <p style="margin: -4px 0 0; font-size: 12px; color: {{c.muted}}">Toplamlara bitirilmemiş kayıt dahil değil. Süreler 5 dakikaya yuvarlandı.</p>
+
+    <sc-for list="{{entries}}" as="e" hint-placeholder-count="5">
+      <article style="{{e.card}}">
+        <div style="display: flex; align-items: center; gap: 10px">
+          <span style="width: 36px; height: 36px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; background: {{c.surface2}}; font-size: 13px; font-weight: 700">{{e.initials}}</span>
+          <div style="flex: 1; min-width: 0">
+            <div style="font-size: 15px; font-weight: 600">{{e.name}}</div>
+            <div style="font-size: 12px; color: {{c.muted}}">{{e.rate}}</div>
+          </div>
+          <span style="{{e.statusChip}}">{{e.statusLabel}}</span>
+        </div>
+
+        <div style="display: flex; align-items: baseline; gap: 8px">
+          <span style="font-size: 17px; font-weight: 700">{{e.time}}</span>
+          <span style="font-size: 13px; color: {{c.muted}}">{{e.dur}}</span>
+          <span style="margin-left: auto; font-size: 15px; font-weight: 700">{{e.pay}}</span>
+        </div>
+
+        <sc-if value="{{e.edited}}" hint-placeholder-val="{{false}}">
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: {{c.warn}}">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>
+            <span>{{e.editNote}}</span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{e.missing}}" hint-placeholder-val="{{false}}">
+          <div style="display: flex; align-items: flex-end; gap: 8px">
+            <label style="flex: 1; display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: {{c.bad}}">
+              Bitiş saati girilmedi
+              <input type="time" value="23:30" style="height: 44px; border-radius: 12px; border: 1px solid {{c.bad}}; background: {{c.surface}}; color: {{c.text}}; padding: 0 12px; font-size: 15px">
+            </label>
+            <button style="height: 44px; padding: 0 16px; border: 0; border-radius: 12px; background: {{c.accent}}; color: {{c.onAccent}}; font-size: 14px; font-weight: 600">Kaydet</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{e.canApprove}}" hint-placeholder-val="{{true}}">
+          <div style="display: flex; gap: 8px">
+            <button style="flex: 1; height: 44px; border: 1px solid {{c.border}}; border-radius: 12px; background: transparent; color: {{c.text}}; font-size: 14px; font-weight: 600">Düzenle</button>
+            <button onClick="{{e.toggle}}" style="{{e.approveBtn}}">{{e.approveLabel}}</button>
+          </div>
+        </sc-if>
+      </article>
+    </sc-for>
+  </main>
+
+  <div style="padding: 12px 16px 18px; border-top: 1px solid {{c.border}}; background: {{c.surface}}">
+    <button onClick="{{approveAll}}" style="width: 100%; height: 52px; border: 0; border-radius: 14px; background: {{c.accent}}; color: {{c.onAccent}}; font-size: 16px; font-weight: 700">{{allLabel}}</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+var PALETTES = {
+  light: { bg: '#F6F4F1', surface: '#FFFFFF', surface2: '#F0EDE8', text: '#1C1917', muted: '#665E57', border: '#E4DFD8', accent: '#C2381B', accentSoft: '#FBE9E4', onAccent: '#FFFFFF', ok: '#1E7549', okSoft: '#E3F3EA', warn: '#8F5400', warnSoft: '#FDF0D9', bad: '#B42318', badSoft: '#FDE7E5', info: '#1D5FA8', infoSoft: '#E6EEF9', onInfo: '#FFFFFF' },
+  dark: { bg: '#141210', surface: '#1E1B18', surface2: '#29251F', text: '#F3EFEA', muted: '#A9A096', border: '#37322B', accent: '#F06A4A', accentSoft: '#3A1F17', onAccent: '#1A0B06', ok: '#5CC98E', okSoft: '#16301F', warn: '#F2B04A', warnSoft: '#33260F', bad: '#F27C6F', badSoft: '#3A1A17', info: '#7FB2F0', infoSoft: '#172739', onInfo: '#0B1626' }
+};
+var ENTRIES = [
+  { id: 'ay', initials: 'AY', name: 'Ahmet Yılmaz', rate: '€13,00 / saat', time: '16:55 – 01:30', dur: '8 sa 35 dk', pay: '€111,58' },
+  { id: 'ek', initials: 'EK', name: 'Elif Kaya', rate: '€12,50 / saat', time: '17:00 – 02:05', dur: '9 sa 05 dk', pay: '€113,54', edited: true, editNote: 'Düzenlendi · ilk giriş 17:20 başlangıç' },
+  { id: 'md', initials: 'MD', name: 'Murat Demir', rate: '€14,00 / saat', time: '16:00 – 00:30', dur: '8 sa 30 dk', pay: '€119,00' },
+  { id: 'sa', initials: 'SA', name: 'Sena Aksoy', rate: '€13,00 / saat', time: '18:00 – ?', dur: 'Bitirilmedi', pay: '–', missing: true },
+  { id: 'co', initials: 'CÖ', name: 'Can Öztürk', rate: '€13,50 / saat', time: '16:30 – 23:15', dur: '6 sa 45 dk', pay: '€91,13' }
+];
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { theme: null, approved: {} };
+  }
+  renderVals() {
+    var self = this;
+    var theme = this.state.theme || this.props.theme || 'light';
+    var c = PALETTES[theme] || PALETTES.light;
+    var approved = this.state.approved;
+    var chip = function (fg, bg) { return 'font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; color: ' + fg + '; background: ' + bg + '; white-space: nowrap'; };
+    var entries = ENTRIES.map(function (e) {
+      var ok = !!approved[e.id];
+      var status = e.missing ? ['Eksik', chip(c.bad, c.badSoft)] : ok ? ['Onaylandı', chip(c.ok, c.okSoft)] : ['Bekliyor', chip(c.warn, c.warnSoft)];
+      return {
+        initials: e.initials, name: e.name, rate: e.rate, time: e.time, dur: e.dur, pay: e.pay,
+        edited: !!e.edited, editNote: e.editNote || '', missing: !!e.missing, canApprove: !e.missing,
+        statusLabel: status[0], statusChip: status[1],
+        card: 'background: ' + c.surface + '; border: 1px solid ' + (e.missing ? c.bad : c.border) + '; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 12px;',
+        approveLabel: ok ? 'Onaylandı ✓' : 'Onayla',
+        approveBtn: 'flex: 1; height: 44px; border-radius: 12px; font-size: 14px; font-weight: 600; ' + (ok ? 'border: 1px solid ' + c.ok + '; background: ' + c.okSoft + '; color: ' + c.ok + ';' : 'border: 0; background: ' + c.text + '; color: ' + c.bg + ';'),
+        toggle: function () { var next = Object.assign({}, self.state.approved); next[e.id] = !next[e.id]; self.setState({ approved: next }); }
+      };
+    });
+    var pending = ENTRIES.filter(function (e) { return !e.missing && !approved[e.id]; });
+    var doneCount = ENTRIES.filter(function (e) { return approved[e.id]; }).length;
+    return {
+      c: c,
+      isDark: theme === 'dark',
+      isLight: theme !== 'dark',
+      entries: entries,
+      doneCount: doneCount,
+      allLabel: pending.length ? 'Kalan ' + pending.length + ' kaydı onayla' : 'Tümü onaylandı',
+      approveAll: function () { var next = {}; ENTRIES.forEach(function (e) { if (!e.missing) next[e.id] = true; }); self.setState({ approved: next }); },
+      toggleTheme: function () { self.setState({ theme: theme === 'dark' ? 'light' : 'dark' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

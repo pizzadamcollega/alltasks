@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Haftalık program taslağı</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#F06A4A}a:hover{color:#FF8A6E}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; font-family: Inter, system-ui, sans-serif; background: {{c.bg}}; color: {{c.text}}; font-variant-numeric: tabular-nums; overflow: hidden">
+
+  <header style="display: flex; align-items: center; gap: 8px; padding: 12px 16px 8px">
+    <a href="Patron.dc.html" aria-label="Ana sayfaya dön" style="width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: {{c.text}}">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg>
+    </a>
+    <div style="flex: 1; min-width: 0">
+      <h1 style="margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.2px">Program · 2–8 Kasım</h1>
+      <div style="font-size: 12px; color: {{c.muted}}; margin-top: 2px">Hafta 45 · De Pijp</div>
+    </div>
+    <span style="{{statusChip}}">{{statusLabel}}</span>
+    <button onClick="{{toggleTheme}}" aria-label="Temayı değiştir" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; display: flex; align-items: center; justify-content: center">
+      <sc-if value="{{isDark}}" hint-placeholder-val="{{true}}">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+      </sc-if>
+      <sc-if value="{{isLight}}" hint-placeholder-val="{{false}}">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg>
+      </sc-if>
+    </button>
+  </header>
+
+  <main style="flex: 1; overflow-y: auto; padding: 4px 16px 16px; display: flex; flex-direction: column; gap: 12px">
+
+    <section aria-label="Talep özeti" style="background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+      <div style="font-size: 13px; color: {{c.muted}}">Talepler Perşembe 29 Ekim 23:59'da kapandı.</div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: 20px; font-weight: 700">3</span>
+          <span style="font-size: 12px; color: {{c.muted}}">şablonu onayladı</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: 20px; font-weight: 700; color: {{c.info}}">2</span>
+          <span style="font-size: 12px; color: {{c.muted}}">değişiklik istedi</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: 20px; font-weight: 700">1</span>
+          <span style="font-size: 12px; color: {{c.muted}}">yanıtsız · şablon geçerli</span>
+        </div>
+      </div>
+    </section>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: {{c.muted}}">
+      <span style="display: flex; align-items: center; gap: 6px"><span style="width: 14px; height: 14px; border-radius: 4px; background: {{c.surface2}}; border: 1px solid {{c.border}}"></span>Şablondan</span>
+      <span style="display: flex; align-items: center; gap: 6px"><span style="width: 14px; height: 14px; border-radius: 4px; background: {{c.infoSoft}}; border: 1px dashed {{c.info}}"></span>Çalışan değişikliği</span>
+      <span style="display: flex; align-items: center; gap: 6px"><span style="width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid {{c.bad}}"></span>Minimumun altında</span>
+    </div>
+
+    <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+      <article style="{{d.card}}">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span style="font-size: 15px; font-weight: 700">{{d.day}}</span>
+          <span style="font-size: 13px; color: {{c.muted}}">{{d.date}}</span>
+          <span style="{{d.countStyle}}">{{d.count}}</span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px">
+          <sc-for list="{{d.people}}" as="p" hint-placeholder-count="4">
+            <span style="{{p.style}}">{{p.name}}</span>
+          </sc-for>
+          <sc-if value="{{d.short}}" hint-placeholder-val="{{false}}">
+            <button style="height: 32px; padding: 0 12px; border-radius: 999px; border: 1px dashed {{c.bad}}; background: transparent; color: {{c.bad}}; font-size: 13px; font-weight: 600">+ Kişi ekle</button>
+          </sc-if>
+        </div>
+      </article>
+    </sc-for>
+  </main>
+
+  <div style="padding: 12px 16px 18px; border-top: 1px solid {{c.border}}; background: {{c.surface}}; display: flex; flex-direction: column; gap: 8px">
+    <sc-if value="{{hasWarnings}}" hint-placeholder-val="{{true}}">
+      <div style="font-size: 12px; color: {{c.bad}}; text-align: center">2 gün minimum personelin altında. Yine de yayınlayabilirsin.</div>
+    </sc-if>
+    <button onClick="{{publish}}" style="{{publishBtn}}">{{publishLabel}}</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"dark"},"$preview":{"width":390,"height":844}}'>
+var PALETTES = {
+  light: { bg: '#F6F4F1', surface: '#FFFFFF', surface2: '#F0EDE8', text: '#1C1917', muted: '#665E57', border: '#E4DFD8', accent: '#C2381B', accentSoft: '#FBE9E4', onAccent: '#FFFFFF', ok: '#1E7549', okSoft: '#E3F3EA', warn: '#8F5400', warnSoft: '#FDF0D9', bad: '#B42318', badSoft: '#FDE7E5', info: '#1D5FA8', infoSoft: '#E6EEF9', onInfo: '#FFFFFF' },
+  dark: { bg: '#141210', surface: '#1E1B18', surface2: '#29251F', text: '#F3EFEA', muted: '#A9A096', border: '#37322B', accent: '#F06A4A', accentSoft: '#3A1F17', onAccent: '#1A0B06', ok: '#5CC98E', okSoft: '#16301F', warn: '#F2B04A', warnSoft: '#33260F', bad: '#F27C6F', badSoft: '#3A1A17', info: '#7FB2F0', infoSoft: '#172739', onInfo: '#0B1626' }
+};
+var DAYS = [
+  { day: 'Pazartesi', date: '2 Kasım', min: 4, people: [['Ahmet'], ['Elif'], ['Murat'], ['Can']] },
+  { day: 'Salı', date: '3 Kasım', min: 4, people: [['Ahmet'], ['Sena'], ['Murat'], ['Elif', 1]] },
+  { day: 'Çarşamba', date: '4 Kasım', min: 4, people: [['Elif'], ['Can'], ['Sena'], ['Murat']] },
+  { day: 'Perşembe', date: '5 Kasım', min: 4, people: [['Ahmet'], ['Can'], ['Sena']] },
+  { day: 'Cuma', date: '6 Kasım', min: 6, people: [['Ahmet'], ['Elif'], ['Murat'], ['Can'], ['Sena'], ['Deniz', 1]] },
+  { day: 'Cumartesi', date: '7 Kasım', min: 6, people: [['Ahmet'], ['Elif'], ['Murat'], ['Can'], ['Sena']] },
+  { day: 'Pazar', date: '8 Kasım', min: 4, people: [['Murat'], ['Can'], ['Deniz'], ['Sena']] }
+];
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { theme: null, published: false };
+  }
+  renderVals() {
+    var self = this;
+    var theme = this.state.theme || this.props.theme || 'dark';
+    var c = PALETTES[theme] || PALETTES.dark;
+    var published = this.state.published;
+    var chip = function (fg, bg) { return 'font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 999px; color: ' + fg + '; background: ' + bg + '; white-space: nowrap'; };
+    var days = DAYS.map(function (d) {
+      var short = d.people.length < d.min;
+      return {
+        day: d.day, date: d.date, short: short && !published,
+        count: d.people.length + ' / ' + d.min + (short ? ' · eksik' : ''),
+        countStyle: 'margin-left: auto; ' + (short ? chip(c.bad, c.badSoft) : 'font-size: 12px; font-weight: 600; color: ' + c.muted + ';'),
+        card: 'background: ' + c.surface + '; border: ' + (short ? '1.5px solid ' + c.bad : '1px solid ' + c.border) + '; border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;',
+        people: d.people.map(function (p) {
+          var changed = !!p[1];
+          return {
+            name: p[0],
+            style: 'height: 32px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 999px; font-size: 13px; font-weight: 500; ' + (changed ? 'background: ' + c.infoSoft + '; color: ' + c.info + '; border: 1px dashed ' + c.info + ';' : 'background: ' + c.surface2 + '; color: ' + c.text + '; border: 1px solid ' + c.border + ';')
+          };
+        })
+      };
+    });
+    return {
+      c: c,
+      isDark: theme === 'dark',
+      isLight: theme !== 'dark',
+      days: days,
+      hasWarnings: !published,
+      statusLabel: published ? 'Kilitli' : 'Taslak',
+      statusChip: published ? chip(c.ok, c.okSoft) : chip(c.warn, c.warnSoft),
+      publishLabel: published ? 'Yayınlandı · çalışanlara bildirildi' : 'Programı yayınla ve kilitle',
+      publishBtn: 'width: 100%; height: 52px; border-radius: 14px; font-size: 16px; font-weight: 700; ' + (published ? 'border: 1px solid ' + c.ok + '; background: ' + c.okSoft + '; color: ' + c.ok + ';' : 'border: 0; background: ' + c.accent + '; color: ' + c.onAccent + ';'),
+      publish: function () { self.setState({ published: !published }); },
+      toggleTheme: function () { self.setState({ theme: theme === 'dark' ? 'light' : 'dark' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

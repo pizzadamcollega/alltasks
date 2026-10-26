@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Şube ayarları</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#C2381B}a:hover{color:#9E2C14}
+button,input,select{font-family:inherit}
+button{cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; font-family: Inter, system-ui, sans-serif; background: {{c.bg}}; color: {{c.text}}; font-variant-numeric: tabular-nums; overflow: hidden">
+
+  <header style="display: flex; align-items: center; gap: 8px; padding: 12px 16px 8px">
+    <a href="Patron.dc.html" aria-label="Geri" style="width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: {{c.text}}">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg>
+    </a>
+    <div style="flex: 1">
+      <h1 style="margin: 0; font-size: 20px; font-weight: 700">Ayarlar</h1>
+      <div style="font-size: 12px; color: {{c.muted}}; margin-top: 2px">Pizzadam De Pijp</div>
+    </div>
+  </header>
+
+  <main style="flex: 1; overflow-y: auto; padding: 4px 16px 16px; display: flex; flex-direction: column; gap: 16px">
+
+    <section aria-label="Talep kapanışı" style="background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 700">Haftalık talep kapanışı</h2>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: {{c.muted}}">Gün
+          <select style="height: 44px; border-radius: 10px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; padding: 0 10px; font-size: 15px">
+            <option>Pazartesi</option><option>Salı</option><option>Çarşamba</option><option selected>Perşembe</option><option>Cuma</option><option>Cumartesi</option><option>Pazar</option>
+          </select>
+        </label>
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: {{c.muted}}">Saat
+          <input type="time" value="23:59" style="height: 44px; border-radius: 10px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; padding: 0 10px; font-size: 15px">
+        </label>
+      </div>
+      <p style="margin: 0; font-size: 12px; color: {{c.muted}}">Program haftasından önceki bu gün ve saatte talepler kapanır. Yanıt vermeyenlerin şablonu geçerli sayılır ve taslak oluşur.</p>
+    </section>
+
+    <section aria-label="Minimum personel" style="background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 4px">
+      <h2 style="margin: 0 0 6px; font-size: 15px; font-weight: 700">Minimum personel</h2>
+      <sc-for list="{{mins}}" as="m" hint-placeholder-count="7">
+        <div style="display: flex; align-items: center; gap: 10px; min-height: 48px; border-top: {{m.divider}}">
+          <span style="flex: 1; font-size: 14px; font-weight: 500">{{m.day}}</span>
+          <button onClick="{{m.dec}}" aria-label="{{m.decLabel}}" style="width: 40px; height: 40px; border-radius: 10px; border: 1px solid {{c.border}}; background: transparent; color: {{c.text}}; font-size: 18px; font-weight: 600">−</button>
+          <span style="width: 28px; text-align: center; font-size: 16px; font-weight: 700">{{m.n}}</span>
+          <button onClick="{{m.inc}}" aria-label="{{m.incLabel}}" style="width: 40px; height: 40px; border-radius: 10px; border: 1px solid {{c.border}}; background: transparent; color: {{c.text}}; font-size: 18px; font-weight: 600">+</button>
+        </div>
+      </sc-for>
+    </section>
+
+    <section aria-label="Çalışan hesapları" style="background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <div style="flex: 1">
+          <h2 style="margin: 0; font-size: 15px; font-weight: 700">Çalışan hesapları</h2>
+          <div style="font-size: 12px; color: {{c.muted}}; margin-top: 2px">6 aktif · 1 pasif</div>
+        </div>
+        <button onClick="{{toggleNew}}" style="height: 40px; padding: 0 12px; border-radius: 10px; border: 0; background: {{c.accentSoft}}; color: {{c.accent}}; font-size: 13px; font-weight: 600">{{newBtn}}</button>
+      </div>
+      <sc-if value="{{newOpen}}" hint-placeholder-val="{{false}}">
+        <form style="display: flex; flex-direction: column; gap: 10px">
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600">Ad soyad
+            <input type="text" style="height: 44px; border-radius: 10px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; padding: 0 10px; font-size: 15px">
+          </label>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600">Kullanıcı adı
+              <input type="text" placeholder="ad.soyad" style="height: 44px; border-radius: 10px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; padding: 0 10px; font-size: 15px">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600">Geçici şifre
+              <input type="text" style="height: 44px; border-radius: 10px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; padding: 0 10px; font-size: 15px">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600">Saatlik ücret (€)
+              <input type="number" step="0.05" style="height: 44px; border-radius: 10px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; padding: 0 10px; font-size: 15px">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600">Başlangıç tarihi
+              <input type="date" style="height: 44px; border-radius: 10px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; padding: 0 8px; font-size: 15px">
+            </label>
+          </div>
+          <fieldset style="border: 0; padding: 0; margin: 0; display: flex; gap: 16px; font-size: 14px">
+            <legend style="font-size: 12px; font-weight: 600; margin-bottom: 6px">Şubeler</legend>
+            <label style="display: flex; align-items: center; gap: 8px; min-height: 44px"><input type="checkbox" checked style="width: 20px; height: 20px">De Pijp</label>
+            <label style="display: flex; align-items: center; gap: 8px; min-height: 44px"><input type="checkbox" style="width: 20px; height: 20px">Zuid</label>
+          </fieldset>
+          <button type="button" style="height: 46px; border-radius: 12px; border: 0; background: {{c.accent}}; color: {{c.onAccent}}; font-size: 15px; font-weight: 600">Hesabı oluştur</button>
+        </form>
+      </sc-if>
+    </section>
+
+    <section aria-label="Şube bilgisi" style="background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 700">Şube bilgisi</h2>
+      <div style="font-size: 14px">Ferdinand Bolstraat 64h, Amsterdam · 16:00–03:00</div>
+      <div style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; background: {{c.surface2}}">
+        <span style="flex: 1; font-size: 14px; font-weight: 600">pizzadam.vercel.app/de-pijp</span>
+        <button style="height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; font-size: 12px; font-weight: 600">Kopyala</button>
+      </div>
+      <p style="margin: 0; font-size: 12px; color: {{c.muted}}">Çalışanlar bu adresle giriş yapar. Gün sınırı 06:00: bu saatten önce başlayan vardiya önceki güne yazılır.</p>
+    </section>
+
+    <section aria-label="Görünüm" style="background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+      <h2 style="margin: 0; font-size: 15px; font-weight: 700">Görünüm</h2>
+      <div role="radiogroup" aria-label="Tema" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 12px; background: {{c.surface2}}">
+        <button role="radio" aria-checked="{{isLight}}" onClick="{{setLight}}" style="{{tLight}}">Aydınlık</button>
+        <button role="radio" aria-checked="{{isDark}}" onClick="{{setDark}}" style="{{tDark}}">Karanlık</button>
+        <button role="radio" aria-checked="{{isSystem}}" onClick="{{setSystem}}" style="{{tSystem}}">Cihaz</button>
+      </div>
+    </section>
+  </main>
+
+  <div style="padding: 12px 16px 18px; border-top: 1px solid {{c.border}}; background: {{c.surface}}">
+    <button onClick="{{save}}" style="width: 100%; height: 52px; border-radius: 14px; border: 0; background: {{c.accent}}; color: {{c.onAccent}}; font-size: 16px; font-weight: 700">{{saveLabel}}</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+var PALETTES = {
+  light: { bg: '#F6F4F1', surface: '#FFFFFF', surface2: '#F0EDE8', text: '#1C1917', muted: '#665E57', border: '#E4DFD8', accent: '#C2381B', accentSoft: '#FBE9E4', onAccent: '#FFFFFF' },
+  dark: { bg: '#141210', surface: '#1E1B18', surface2: '#29251F', text: '#F3EFEA', muted: '#A9A096', border: '#37322B', accent: '#F06A4A', accentSoft: '#3A1F17', onAccent: '#1A0B06' }
+};
+var DAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { mode: null, mins: [4, 4, 4, 4, 6, 6, 4], newOpen: false, saved: false };
+  }
+  renderVals() {
+    var self = this;
+    var s = this.state;
+    var mode = s.mode || this.props.theme || 'light';
+    var theme = mode === 'system' ? 'light' : mode;
+    var c = PALETTES[theme] || PALETTES.light;
+    var seg = function (on) { return 'height: 40px; border-radius: 9px; border: 0; font-size: 13px; font-weight: 600; ' + (on ? 'background: ' + c.surface + '; color: ' + c.text + '; box-shadow: 0 1px 2px rgba(0,0,0,0.08);' : 'background: transparent; color: ' + c.muted + ';'); };
+    var mins = DAYS.map(function (d, i) {
+      var set = function (delta) { var m = s.mins.slice(); m[i] = Math.max(0, Math.min(12, m[i] + delta)); self.setState({ mins: m, saved: false }); };
+      return {
+        day: d, n: s.mins[i],
+        divider: i === 0 ? 'none' : '1px solid ' + c.border,
+        decLabel: d + ' minimumunu azalt', incLabel: d + ' minimumunu artır',
+        dec: function () { set(-1); }, inc: function () { set(1); }
+      };
+    });
+    return {
+      c: c,
+      mins: mins,
+      newOpen: s.newOpen,
+      newBtn: s.newOpen ? 'Vazgeç' : '+ Yeni çalışan',
+      toggleNew: function () { self.setState({ newOpen: !s.newOpen }); },
+      isLight: mode === 'light', isDark: mode === 'dark', isSystem: mode === 'system',
+      tLight: seg(mode === 'light'), tDark: seg(mode === 'dark'), tSystem: seg(mode === 'system'),
+      setLight: function () { self.setState({ mode: 'light' }); },
+      setDark: function () { self.setState({ mode: 'dark' }); },
+      setSystem: function () { self.setState({ mode: 'system' }); },
+      saveLabel: s.saved ? 'Kaydedildi ✓' : 'Değişiklikleri kaydet',
+      save: function () { self.setState({ saved: true }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

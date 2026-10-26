@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Geçmiş ve kazanç</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#C2381B}a:hover{color:#9E2C14}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; font-family: Inter, system-ui, sans-serif; background: {{c.bg}}; color: {{c.text}}; font-variant-numeric: tabular-nums; overflow: hidden">
+
+  <header style="display: flex; align-items: center; gap: 10px; padding: 16px 16px 8px">
+    <h1 style="flex: 1; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px">Geçmiş</h1>
+    <button onClick="{{toggleTheme}}" aria-label="Temayı değiştir" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; display: flex; align-items: center; justify-content: center">
+      <sc-if value="{{isDark}}" hint-placeholder-val="{{false}}">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+      </sc-if>
+      <sc-if value="{{isLight}}" hint-placeholder-val="{{true}}">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg>
+      </sc-if>
+    </button>
+  </header>
+
+  <div style="display: flex; align-items: center; gap: 8px; padding: 0 16px 10px">
+    <button aria-label="Önceki ay" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.text}}; display: flex; align-items: center; justify-content: center">
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg>
+    </button>
+    <div style="flex: 1; text-align: center; font-size: 16px; font-weight: 700">Ekim 2026</div>
+    <button aria-label="Sonraki ay" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid {{c.border}}; background: {{c.surface}}; color: {{c.muted}}; display: flex; align-items: center; justify-content: center">
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>
+    </button>
+  </div>
+
+  <div role="tablist" aria-label="Görünüm" style="margin: 0 16px 12px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 14px; background: {{c.surface2}}">
+    <button role="tab" aria-selected="{{isDay}}" onClick="{{showDay}}" style="{{tabDay}}">Günlük</button>
+    <button role="tab" aria-selected="{{isWeek}}" onClick="{{showWeek}}" style="{{tabWeek}}">Haftalık</button>
+    <button role="tab" aria-selected="{{isMonth}}" onClick="{{showMonth}}" style="{{tabMonth}}">Aylık</button>
+  </div>
+
+  <main style="flex: 1; overflow-y: auto; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 14px">
+
+    <section aria-label="Ekim özeti" style="background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 4px">
+      <span style="font-size: 13px; font-weight: 600; color: {{c.muted}}">Ekim toplamı</span>
+      <span style="font-size: 32px; font-weight: 700; letter-spacing: -0.6px">€812,50</span>
+      <span style="font-size: 13px; color: {{c.muted}}">62 sa 30 dk · 10 gün · €13,00 / saat</span>
+      <div style="display: flex; gap: 8px; margin-top: 8px">
+        <span style="font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: {{c.okSoft}}; color: {{c.ok}}">Onaylı €700,92</span>
+        <span style="font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: {{c.warnSoft}}; color: {{c.warn}}">Bekleyen €111,58</span>
+      </div>
+    </section>
+
+    <section aria-label="Kayıtlar" style="background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 16px; overflow: hidden">
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; min-height: 48px; border-top: {{r.divider}}">
+          <div style="flex: 1; min-width: 0">
+            <div style="font-size: 14px; font-weight: 600">{{r.title}}</div>
+            <div style="font-size: 12px; color: {{c.muted}}; margin-top: 2px">{{r.sub}}</div>
+          </div>
+          <div style="text-align: right">
+            <div style="font-size: 14px; font-weight: 700">{{r.pay}}</div>
+            <div style="{{r.noteStyle}}">{{r.note}}</div>
+          </div>
+        </div>
+      </sc-for>
+    </section>
+
+    <section aria-label="Ödemeler" style="display: flex; flex-direction: column; gap: 10px">
+      <div>
+        <h2 style="margin: 0; font-size: 16px; font-weight: 700">Ödemeler</h2>
+        <p style="margin: 4px 0 0; font-size: 12px; color: {{c.muted}}">Patronunun seninle paylaştığı ödeme bilgileri.</p>
+      </div>
+      <div style="background: {{c.surface}}; border: 1px solid {{c.border}}; border-radius: 16px; padding: 4px 14px">
+        <div style="display: flex; justify-content: space-between; padding: 10px 0; font-size: 14px"><span>Hesaplanan ücret</span><span style="font-weight: 600">€812,50</span></div>
+        <div style="display: flex; justify-content: space-between; padding: 10px 0; font-size: 14px; border-top: 1px solid {{c.border}}"><span>Avans · 10 Ekim</span><span style="font-weight: 600">−€150,00</span></div>
+        <div style="display: flex; justify-content: space-between; padding: 12px 0; font-size: 15px; font-weight: 700; border-top: 1px solid {{c.border}}"><span>Kalan</span><span>€662,50</span></div>
+      </div>
+    </section>
+  </main>
+
+  <nav aria-label="Ana menü" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid {{c.border}}; background: {{c.surface}}; padding: 6px 8px 14px">
+    <a href="Main.dc.html" style="height: 56px; text-decoration: none; color: {{c.muted}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 500">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg>
+      Ana sayfa
+    </a>
+    <a href="Takvim.dc.html" style="height: 56px; text-decoration: none; color: {{c.muted}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 500">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>
+      Takvim
+    </a>
+    <a href="Talepler.dc.html" style="height: 56px; text-decoration: none; color: {{c.muted}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 500">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H8l-4 4z"></path><path d="M8 9h8M8 12h5"></path></svg>
+      Talepler
+    </a>
+    <a href="Gecmis.dc.html" aria-current="page" style="height: 56px; text-decoration: none; color: {{c.accent}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 600">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+      Geçmiş
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+var PALETTES = {
+  light: { bg: '#F6F4F1', surface: '#FFFFFF', surface2: '#F0EDE8', text: '#1C1917', muted: '#665E57', border: '#E4DFD8', accent: '#C2381B', accentSoft: '#FBE9E4', onAccent: '#FFFFFF', ok: '#1E7549', okSoft: '#E3F3EA', warn: '#8F5400', warnSoft: '#FDF0D9' },
+  dark: { bg: '#141210', surface: '#1E1B18', surface2: '#29251F', text: '#F3EFEA', muted: '#A9A096', border: '#37322B', accent: '#F06A4A', accentSoft: '#3A1F17', onAccent: '#1A0B06', ok: '#5CC98E', okSoft: '#16301F', warn: '#F2B04A', warnSoft: '#33260F' }
+};
+var VIEWS = {
+  day: [
+    { title: 'Cumartesi 24 Ekim', sub: '16:55 – 01:30 · 8 sa 35 dk', pay: '€111,58', note: 'Bekliyor', tone: 'warn' },
+    { title: 'Cuma 23 Ekim', sub: '17:00 – 02:05 · 9 sa 05 dk · düzenlendi', pay: '€118,08', note: 'Onaylandı', tone: 'ok' },
+    { title: 'Çarşamba 21 Ekim', sub: '16:00 – 23:00 · 7 sa 00 dk', pay: '€91,00', note: 'Onaylandı', tone: 'ok' },
+    { title: 'Pazartesi 19 Ekim', sub: '17:00 – 23:00 · 6 sa 00 dk', pay: '€78,00', note: 'Onaylandı', tone: 'ok' }
+  ],
+  week: [
+    { title: '19–25 Ekim', sub: '30 sa 40 dk · 4 gün (bugün hariç)', pay: '€398,67', note: '8 sa 35 dk bekliyor', tone: 'warn' },
+    { title: '12–18 Ekim', sub: '17 sa 20 dk · 3 gün', pay: '€225,33', note: 'Onaylandı', tone: 'ok' },
+    { title: '5–11 Ekim', sub: '10 sa 00 dk · 2 gün', pay: '€130,00', note: 'Onaylandı', tone: 'ok' },
+    { title: '1–4 Ekim', sub: '4 sa 30 dk · 1 gün', pay: '€58,50', note: 'Onaylandı', tone: 'ok' }
+  ],
+  month: [
+    { title: 'Ekim 2026', sub: '62 sa 30 dk · 10 gün', pay: '€812,50', note: 'Ay devam ediyor', tone: 'warn' },
+    { title: 'Eylül 2026', sub: '78 sa 15 dk · 12 gün', pay: '€1.017,25', note: 'Ödendi', tone: 'ok' },
+    { title: 'Ağustos 2026', sub: '71 sa 40 dk · 11 gün', pay: '€931,67', note: 'Ödendi', tone: 'ok' }
+  ]
+};
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { theme: null, view: 'day' };
+  }
+  renderVals() {
+    var self = this;
+    var s = this.state;
+    var theme = s.theme || this.props.theme || 'light';
+    var c = PALETTES[theme] || PALETTES.light;
+    var tab = function (on) { return 'height: 44px; border-radius: 10px; border: 0; font-size: 14px; font-weight: 600; ' + (on ? 'background: ' + c.surface + '; color: ' + c.text + '; box-shadow: 0 1px 2px rgba(0,0,0,0.08);' : 'background: transparent; color: ' + c.muted + ';'); };
+    var rows = VIEWS[s.view].map(function (r, i) {
+      return {
+        title: r.title, sub: r.sub, pay: r.pay, note: r.note,
+        noteStyle: 'font-size: 11px; font-weight: 600; margin-top: 2px; color: ' + (r.tone === 'ok' ? c.ok : c.warn) + ';',
+        divider: i === 0 ? 'none' : '1px solid ' + c.border
+      };
+    });
+    return {
+      c: c,
+      isDark: theme === 'dark',
+      isLight: theme !== 'dark',
+      isDay: s.view === 'day', isWeek: s.view === 'week', isMonth: s.view === 'month',
+      tabDay: tab(s.view === 'day'), tabWeek: tab(s.view === 'week'), tabMonth: tab(s.view === 'month'),
+      showDay: function () { self.setState({ view: 'day' }); },
+      showWeek: function () { self.setState({ view: 'week' }); },
+      showMonth: function () { self.setState({ view: 'month' }); },
+      rows: rows,
+      toggleTheme: function () { self.setState({ theme: theme === 'dark' ? 'light' : 'dark' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

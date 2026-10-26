@@ -1,0 +1,40 @@
+# Nightly database backup (DECISIONS D-11).
+# Secret SUPABASE_DB_URL = the production connection string (Session pooler or direct, with password).
+# The dump is kept as a private workflow artifact for 30 days. Test a restore once:
+#   pg_restore --no-owner -d <local-db> pizzadam-YYYY-MM-DD.dump
+name: backup
+
+on:
+  schedule:
+    - cron: '30 3 * * *'   # 03:30 UTC ≈ 04:30/05:30 Amsterdam, after closing time
+  workflow_dispatch:
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      # pg_dump must be >= the server's major version. Check it in Supabase
+      # (Settings → Infrastructure) and adjust PG_MAJOR if needed.
+      - name: Install Postgres client
+        env:
+          PG_MAJOR: '17'
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update
+          sudo apt-get install -y "postgresql-client-${PG_MAJOR}"
+          echo "/usr/lib/postgresql/${PG_MAJOR}/bin" >> "$GITHUB_PATH"
+      - name: pg_dump
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          pg_dump "$SUPABASE_DB_URL" -Fc --no-owner \
+            --schema=public --schema=auth \
+            -f "pizzadam-$(date -u +%F).dump"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pizzadam-db-${{ github.run_id }}
+          path: pizzadam-*.dump
+          retention-days: 30
