@@ -13,7 +13,7 @@ The app is **built and live**, not just specced. Full detail, scope decisions an
 list are in **`docs/PANEL-FEATURE-PLAN.md` — read that file second, right after this one.**
 
 - **Code**: ROADMAP Phase 0–5 implemented (scaffold, auth, employee home/Geçmiş, manager Onay,
-  Çalışanlar/ücret/ödeme), plus a simple weekly shift board (`/program`, D-36) and hand-entered
+  Çalışanlar/ücret/ödeme), plus a weekly shift board (`/program`, D-36) with employee day requests → patron approve/edit → publish (D-43), and hand-entered
   hours (D-37). **There is no Başla/Bitir timer any more (D-38)** — the SPEC/SCREENS clock-in text
   is superseded. Phase 6's request/draft/publish flow, swaps, leave, notifications,
   Raporlar/export, Ayarlar and PWA are **not built**. See PANEL-FEATURE-PLAN §8.

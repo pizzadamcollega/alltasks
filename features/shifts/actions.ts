@@ -5,11 +5,12 @@ import { createClient } from "@/lib/supabase/server";
 import { toErrorMessage } from "@/lib/errors";
 import { addDaysToDate } from "@/lib/time";
 import { getBranchEmployees } from "@/features/branch/queries";
-import { upsertShiftSchema } from "./validation";
+import { decideShiftRequestSchema, submitShiftRequestsSchema, upsertShiftSchema } from "./validation";
 
 export interface ShiftActionResult {
   error?: string;
   copied?: number;
+  count?: number;
 }
 
 function revalidateBoard(branchSlug: string) {
@@ -98,4 +99,95 @@ export async function copyPreviousWeekAction(
 
   revalidateBoard(branchSlug);
   return { copied: inserted?.length ?? 0 };
+}
+
+const isMonday = (value: string) =>
+  /^\d{4}-\d{2}-\d{2}$/.test(value) && new Date(`${value}T12:00:00Z`).getUTCDay() === 1;
+
+/**
+ * Employee "Onaya gönder": the chosen days of one future week replace the
+ * caller's still-pending requests for it. `submit_shift_requests` enforces
+ * who/which week; decided days are left untouched there.
+ */
+export async function submitShiftRequestsAction(
+  branchId: string,
+  branchSlug: string,
+  input: unknown,
+): Promise<ShiftActionResult> {
+  const parsed = submitShiftRequestsSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Geçersiz bilgiler." };
+  }
+  const { monday, days, note } = parsed.data;
+  if (!isMonday(monday)) return { error: "Geçersiz hafta." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("submit_shift_requests", {
+    p_branch: branchId,
+    p_week: monday,
+    p_days: days.map((day) => ({ date: day.date, start: day.start, note: note ?? "" })),
+  });
+  if (error) return { error: toErrorMessage(error) };
+
+  revalidateBoard(branchSlug);
+  return { count: data ?? 0 };
+}
+
+/** Manager: approve (optionally at another start time) or reject one request. */
+export async function decideShiftRequestAction(branchSlug: string, input: unknown): Promise<ShiftActionResult> {
+  const parsed = decideShiftRequestSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Geçersiz bilgiler." };
+  }
+
+  const supabase = await createClient();
+  const { requestId, approve, startTime } = parsed.data;
+  const { error } = await supabase.rpc("decide_shift_request", {
+    p_request: requestId,
+    p_approve: approve,
+    ...(startTime ? { p_start: startTime } : {}),
+  });
+  if (error) return { error: toErrorMessage(error) };
+
+  revalidateBoard(branchSlug);
+  return {};
+}
+
+export async function approvePendingRequestsAction(
+  branchId: string,
+  branchSlug: string,
+  monday: string,
+): Promise<ShiftActionResult> {
+  if (!isMonday(monday)) return { error: "Geçersiz hafta." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("approve_pending_shift_requests", {
+    p_branch: branchId,
+    p_week: monday,
+  });
+  if (error) return { error: toErrorMessage(error) };
+
+  revalidateBoard(branchSlug);
+  return { count: data ?? 0 };
+}
+
+/** "Programı yayınla" / "Yayından kaldır" — RLS lets only this branch's managers write. */
+export async function setWeekPublishedAction(
+  branchId: string,
+  branchSlug: string,
+  monday: string,
+  published: boolean,
+): Promise<ShiftActionResult> {
+  if (!isMonday(monday)) return { error: "Geçersiz hafta." };
+
+  const supabase = await createClient();
+  const { error } = published
+    ? await supabase
+        .from("shift_week_publications")
+        .upsert({ branch_id: branchId, week_start: monday }, { onConflict: "branch_id,week_start", ignoreDuplicates: true })
+    : await supabase.from("shift_week_publications").delete().eq("branch_id", branchId).eq("week_start", monday);
+  if (error) return { error: toErrorMessage(error) };
+
+  revalidateBoard(branchSlug);
+  return {};
 }

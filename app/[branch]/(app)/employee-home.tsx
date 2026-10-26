@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { addDays, format } from "date-fns";
-import { History } from "lucide-react";
+import { CalendarDays, ChevronRight, History } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { formatDayTR, formatDuration, formatTimeTR, monthStart, todayInAmsterdam, weekFromParam, weekStart, TR_MONTHS } from "@/lib/time";
+import { addDaysToDate, formatDayTR, formatDuration, formatTimeTR, monthStart, todayInAmsterdam, weekFromParam, weekStart, TR_MONTHS } from "@/lib/time";
 import { formatEUR } from "@/lib/money";
 import { getEntriesInRange, getMonthlyEarnings, getRecentEntries } from "@/features/entries/queries";
 import { entryEditedNote, entryStatusLabel, entryStatusTone } from "@/features/entries/status";
-import { getWeekShifts } from "@/features/shifts/queries";
+import { getWeekPublication, getWeekRequests, getWeekShifts } from "@/features/shifts/queries";
 import { ManualEntryForm } from "@/components/app/manual-entry-form";
-import { WeekCalendar } from "@/components/app/week-calendar";
+import { PublishBadge, WeekCalendar } from "@/components/app/week-calendar";
 import { StatCard, StatGrid } from "@/components/app/stat-card";
 import { EntryRow } from "@/components/app/entry-row";
 import { EmptyState } from "@/components/app/empty-state";
@@ -23,14 +23,24 @@ export async function EmployeeHome({ session, hafta }: { session: SessionContext
   const weekStartStr = weekStart(today);
   const weekEndStr = format(addDays(new Date(`${weekStartStr}T12:00:00Z`), 6), "yyyy-MM-dd");
   const calendarMonday = weekFromParam(hafta, today);
+  const nextMonday = addDaysToDate(weekStartStr, 7);
+  const calendarIsFuture = calendarMonday >= nextMonday;
 
-  const [monthly, todayEntries, weekEntries, recent, shiftDays] = await Promise.all([
+  const [monthly, todayEntries, weekEntries, recent, shiftDays, calendarPublication, nextRequests, nextPublication] = await Promise.all([
     getMonthlyEarnings(supabase, userId, branch.id, monthStartStr),
     getEntriesInRange(supabase, userId, branch.id, today, today),
     getEntriesInRange(supabase, userId, branch.id, weekStartStr, weekEndStr),
     getRecentEntries(supabase, userId, branch.id, 3),
     getWeekShifts(supabase, branch.id, calendarMonday),
+    calendarIsFuture ? getWeekPublication(supabase, branch.id, calendarMonday) : null,
+    getWeekRequests(supabase, branch.id, nextMonday),
+    getWeekPublication(supabase, branch.id, nextMonday),
   ]);
+  const requestSummary = nextPublication
+    ? "Program yayınlandı — gör"
+    : nextRequests.length === 0
+      ? "Henüz istek göndermedin"
+      : `${nextRequests.length} gün istedin · ${nextRequests.filter((r) => r.status === "approved").length} onaylandı`;
 
   // No Başla/Bitir timer any more (D-38): every entry is typed in by hand, so
   // there is never a running shift to estimate — totals come straight from the views.
@@ -67,6 +77,30 @@ export async function EmployeeHome({ session, hafta }: { session: SessionContext
         monday={calendarMonday}
         basePath={`/${branch.slug}`}
         currentUserId={userId}
+        badge={calendarIsFuture ? <PublishBadge published={Boolean(calendarPublication)} /> : null}
+        notice={
+          calendarIsFuture && !calendarPublication ? (
+            <p className="rounded-card border border-pz-border bg-pz-surface-2 p-4 text-sm text-pz-muted">
+              Bu haftanın programı henüz yayınlanmadı.{" "}
+              <Link href={`/${branch.slug}/program?hafta=${calendarMonday}`} className="font-semibold text-pz-accent">
+                Gün isteği gönder
+              </Link>
+            </p>
+          ) : null
+        }
+        actions={
+          <Link
+            href={`/${branch.slug}/program`}
+            className="flex min-h-14 items-center gap-3 rounded-card border border-pz-border bg-pz-surface px-3 py-2"
+          >
+            <CalendarDays className="size-5 shrink-0 text-pz-accent" aria-hidden />
+            <span className="flex min-w-0 flex-1 flex-col">
+              <span className="text-sm font-semibold text-pz-text">Gelecek hafta için gün iste</span>
+              <span className="text-[13px] text-pz-muted">{requestSummary}</span>
+            </span>
+            <ChevronRight className="size-5 shrink-0 text-pz-muted" aria-hidden />
+          </Link>
+        }
       />
 
       <section aria-label="Kazanç">

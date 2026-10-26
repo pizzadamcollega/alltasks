@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { addDaysToDate, formatDayShortTR, TR_WEEKDAYS } from "@/lib/time";
+import { addDaysToDate, formatDayShortTR, TR_WEEKDAYS, weekStart } from "@/lib/time";
 import type { ShiftDay } from "@/features/shifts/queries";
 import type { BranchEmployee } from "@/features/branch/queries";
 import { ShiftDayEditor } from "./shift-day-editor";
@@ -33,6 +33,8 @@ export function WeekCalendar({
   currentUserId,
   editor,
   actions,
+  badge,
+  notice,
 }: {
   days: ShiftDay[];
   today: string;
@@ -42,48 +44,20 @@ export function WeekCalendar({
   currentUserId?: string;
   editor?: { branchId: string; branchSlug: string; employees: BranchEmployee[] };
   actions?: React.ReactNode;
+  /** Shown next to the week title, e.g. "Taslak" / "Yayınlandı". */
+  badge?: React.ReactNode;
+  /** Replaces the day list, e.g. while a future week is not published yet. */
+  notice?: React.ReactNode;
 }) {
-  const sunday = addDaysToDate(monday, 6);
-  const isCurrentWeek = today >= monday && today <= sunday;
-  const weekHref = (date: string) => `${basePath}?hafta=${date}`;
-
   return (
     <section aria-label="Haftalık program" className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h2 className="text-base font-bold text-pz-text">Haftalık program</h2>
-          <p className="text-sm tabular-nums text-pz-muted">
-            {formatDayShortTR(monday)} – {formatDayShortTR(sunday)}
-          </p>
-        </div>
-        <div className="flex items-center gap-1">
-          {!isCurrentWeek ? (
-            <Link
-              href={basePath}
-              className="flex h-11 items-center rounded-xl px-3 text-sm font-semibold text-pz-accent"
-            >
-              Bu hafta
-            </Link>
-          ) : null}
-          <Link
-            href={weekHref(addDaysToDate(monday, -7))}
-            aria-label="Önceki hafta"
-            className="flex size-11 items-center justify-center rounded-xl border border-pz-border bg-pz-surface text-pz-text"
-          >
-            <ChevronLeft className="size-5" aria-hidden />
-          </Link>
-          <Link
-            href={weekHref(addDaysToDate(monday, 7))}
-            aria-label="Sonraki hafta"
-            className="flex size-11 items-center justify-center rounded-xl border border-pz-border bg-pz-surface text-pz-text"
-          >
-            <ChevronRight className="size-5" aria-hidden />
-          </Link>
-        </div>
-      </div>
+      <WeekNav monday={monday} today={today} basePath={basePath} badge={badge} />
 
       {actions}
 
+      {notice ? (
+        notice
+      ) : (
       <ol
         className={cn(
           "grid grid-cols-1 gap-2",
@@ -162,6 +136,92 @@ export function WeekCalendar({
           );
         })}
       </ol>
+      )}
     </section>
+  );
+}
+
+/**
+ * Week title + ‹ › arrows (`?hafta=` links). `minMonday`/`maxMonday` disable
+ * the arrows at the ends, e.g. requests may only go to the next 8 weeks.
+ */
+export function WeekNav({
+  monday,
+  today,
+  basePath,
+  title = "Haftalık program",
+  badge,
+  minMonday,
+  maxMonday,
+  homeMonday,
+}: {
+  monday: string;
+  today: string;
+  basePath: string;
+  title?: string;
+  badge?: React.ReactNode;
+  minMonday?: string;
+  maxMonday?: string;
+  /** Week the "Bu hafta" shortcut returns to; defaults to the current week. */
+  homeMonday?: string;
+}) {
+  const sunday = addDaysToDate(monday, 6);
+  const home = homeMonday ?? weekStart(today);
+  const weekHref = (date: string) => `${basePath}?hafta=${date}`;
+  const prev = addDaysToDate(monday, -7);
+  const next = addDaysToDate(monday, 7);
+  const arrow = "flex size-11 items-center justify-center rounded-xl border border-pz-border bg-pz-surface text-pz-text";
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <div>
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-base font-bold text-pz-text">{title}</h2>
+          {badge}
+        </div>
+        <p className="text-sm tabular-nums text-pz-muted">
+          {formatDayShortTR(monday)} – {formatDayShortTR(sunday)}
+        </p>
+      </div>
+      <div className="flex items-center gap-1">
+        {monday !== home ? (
+          <Link href={weekHref(home)} className="flex h-11 items-center rounded-xl px-3 text-sm font-semibold text-pz-accent">
+            {homeMonday ? "Gelecek hafta" : "Bu hafta"}
+          </Link>
+        ) : null}
+        {minMonday && prev < minMonday ? (
+          <span aria-hidden className={cn(arrow, "opacity-40")}>
+            <ChevronLeft className="size-5" />
+          </span>
+        ) : (
+          <Link href={weekHref(prev)} aria-label="Önceki hafta" className={arrow}>
+            <ChevronLeft className="size-5" aria-hidden />
+          </Link>
+        )}
+        {maxMonday && next > maxMonday ? (
+          <span aria-hidden className={cn(arrow, "opacity-40")}>
+            <ChevronRight className="size-5" />
+          </span>
+        ) : (
+          <Link href={weekHref(next)} aria-label="Sonraki hafta" className={arrow}>
+            <ChevronRight className="size-5" aria-hidden />
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Small "Taslak" / "Yayınlandı" chip — text, not colour alone. */
+export function PublishBadge({ published }: { published: boolean }) {
+  return (
+    <span
+      className={cn(
+        "rounded-chip px-2 py-[3px] text-[11px] font-bold",
+        published ? "bg-pz-ok-soft text-pz-ok" : "bg-pz-warn-soft text-pz-warn",
+      )}
+    >
+      {published ? "Yayınlandı" : "Taslak"}
+    </span>
   );
 }

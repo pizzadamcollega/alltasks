@@ -14,6 +14,7 @@ export type AppRole = "admin" | "patron" | "employee";
 export type EntryStatus = "open" | "pending" | "approved";
 export type PaymentKind = "payment" | "advance";
 export type ThemePref = "system" | "light" | "dark";
+export type ShiftRequestStatus = "pending" | "approved" | "rejected";
 
 export interface Database {
   public: {
@@ -127,6 +128,35 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["shifts"]["Row"]>;
         Relationships: [];
       };
+      shift_requests: {
+        Row: {
+          id: string;
+          branch_id: string;
+          user_id: string;
+          work_date: string;
+          start_time: string;
+          note: string | null;
+          status: ShiftRequestStatus;
+          decided_by: string | null;
+          decided_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      shift_week_publications: {
+        Row: {
+          branch_id: string;
+          week_start: string;
+          published_by: string | null;
+          published_at: string;
+        };
+        Insert: { branch_id: string; week_start: string };
+        Update: never;
+        Relationships: [];
+      };
       payments: {
         Row: {
           id: string;
@@ -224,6 +254,18 @@ export interface Database {
       manages_user: {
         Args: { p_user: string };
         Returns: boolean;
+      };
+      submit_shift_requests: {
+        Args: { p_branch: string; p_week: string; p_days: { date: string; start: string; note?: string }[] };
+        Returns: number;
+      };
+      decide_shift_request: {
+        Args: { p_request: string; p_approve: boolean; p_start?: string };
+        Returns: undefined;
+      };
+      approve_pending_shift_requests: {
+        Args: { p_branch: string; p_week: string };
+        Returns: number;
       };
     };
     Enums: {

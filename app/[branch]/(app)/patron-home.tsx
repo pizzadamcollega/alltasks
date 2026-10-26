@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { addDays, format } from "date-fns";
-import { CalendarDays, Users } from "lucide-react";
+import { CalendarDays, Inbox, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { formatDayTR, formatDuration, formatTimeTR, minutesSince, monthStart, todayInAmsterdam, weekFromParam, weekStart, TR_MONTHS } from "@/lib/time";
 import { formatEUR } from "@/lib/money";
 import { getDailyBranchCost, getMonthlyBranchCost, getTodayStaff } from "@/features/branch/queries";
 import { entryStatusLabel, entryStatusTone } from "@/features/entries/status";
-import { getWeekShifts } from "@/features/shifts/queries";
+import { getPendingRequestSummary, getWeekPublication, getWeekShifts } from "@/features/shifts/queries";
 import { StatCard, StatGrid } from "@/components/app/stat-card";
-import { WeekCalendar } from "@/components/app/week-calendar";
+import { PublishBadge, WeekCalendar } from "@/components/app/week-calendar";
 import { EntryRow } from "@/components/app/entry-row";
 import { EmptyState } from "@/components/app/empty-state";
 import type { SessionContext } from "@/lib/session";
@@ -22,11 +22,14 @@ export async function PatronHome({ session, hafta }: { session: SessionContext; 
   const monthStartStr = monthStart(today);
   const calendarMonday = weekFromParam(hafta, today);
 
-  const [monthCost, yesterdayCost, staff, shiftDays] = await Promise.all([
+  const calendarIsFuture = calendarMonday > weekStart(today);
+  const [monthCost, yesterdayCost, staff, shiftDays, pendingRequests, calendarPublication] = await Promise.all([
     getMonthlyBranchCost(supabase, branch.id, monthStartStr),
     getDailyBranchCost(supabase, branch.id, yesterday),
     getTodayStaff(supabase, branch.id, today),
     getWeekShifts(supabase, branch.id, calendarMonday),
+    getPendingRequestSummary(supabase, branch.id, today),
+    calendarIsFuture ? getWeekPublication(supabase, branch.id, calendarMonday) : null,
   ]);
 
   const monthLabel = TR_MONTHS[Number(today.slice(5, 7)) - 1];
@@ -65,6 +68,19 @@ export async function PatronHome({ session, hafta }: { session: SessionContext; 
           <StatCard label="Bugün" value={`${staff.length} / ${plannedToday}`} sub="saat girdi / programda" />
         </StatGrid>
       </section>
+
+      {pendingRequests.count > 0 && pendingRequests.firstDate ? (
+        <Link
+          href={`/${branch.slug}/program?hafta=${weekStart(pendingRequests.firstDate)}`}
+          className="flex min-h-14 items-center gap-3 rounded-card border border-pz-warn/40 bg-pz-warn-soft px-3 py-2"
+        >
+          <Inbox className="size-5 shrink-0 text-pz-warn" aria-hidden />
+          <span className="flex-1 text-sm font-semibold text-pz-text">
+            {pendingRequests.count} program isteği onay bekliyor
+          </span>
+          <span className="text-sm font-semibold text-pz-accent">Gör</span>
+        </Link>
+      ) : null}
 
       <section aria-label="Bugün çalışanlar" className="flex flex-col gap-1">
         <h2 className="text-base font-bold text-pz-text">Bugün çalışanlar</h2>
@@ -105,6 +121,7 @@ export async function PatronHome({ session, hafta }: { session: SessionContext; 
         today={today}
         monday={calendarMonday}
         basePath={`/${branch.slug}`}
+        badge={calendarIsFuture ? <PublishBadge published={Boolean(calendarPublication)} /> : null}
         actions={
           <Link
             href={`/${branch.slug}/program${hafta ? `?hafta=${calendarMonday}` : ""}`}

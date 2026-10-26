@@ -10,6 +10,8 @@ import type { AppRole } from "@/types/database";
 interface NavItem {
   href: string;
   label: string;
+  /** Bottom-bar label when `label` is too long for a tab. */
+  shortLabel?: string;
   icon: LucideIcon;
 }
 
@@ -22,12 +24,13 @@ function navItemsFor(role: AppRole, branch: string): NavItem[] {
   if (role === "employee") {
     return [
       { href: `/${branch}`, label: "Ana sayfa", icon: Home },
+      { href: `/${branch}/program`, label: "Haftalık program", shortLabel: "Program", icon: CalendarDays },
       { href: `/${branch}/gecmis`, label: "Geçmiş", icon: History },
     ];
   }
   return [
     { href: `/${branch}`, label: "Ana sayfa", icon: Home },
-    { href: `/${branch}/program`, label: "Program", icon: CalendarDays },
+    { href: `/${branch}/program`, label: "Haftalık program", shortLabel: "Program", icon: CalendarDays },
     { href: `/${branch}/onay`, label: "Onay", icon: CheckSquare },
     { href: `/${branch}/calisanlar`, label: "Çalışanlar", icon: Users },
   ];
@@ -52,7 +55,7 @@ export function BottomNav({ role, branch }: { role: AppRole; branch: string }) {
       className="fixed inset-x-0 bottom-0 z-20 grid border-t border-pz-border bg-pz-surface px-2 pb-[max(14px,env(safe-area-inset-bottom))] pt-1.5 lg:hidden"
       style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
     >
-      {items.map(({ href, label, icon: Icon, active }) => (
+      {items.map(({ href, label, shortLabel, icon: Icon, active }) => (
         <Link
           key={href}
           href={href}
@@ -63,7 +66,7 @@ export function BottomNav({ role, branch }: { role: AppRole; branch: string }) {
           )}
         >
           <Icon className="size-[22px]" strokeWidth={1.8} aria-hidden />
-          {label}
+          {shortLabel ?? label}
         </Link>
       ))}
     </nav>

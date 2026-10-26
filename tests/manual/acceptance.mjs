@@ -31,6 +31,7 @@ const TEST_IDS = ["test.ahmet", "test.murat"].map((u) => idOf[u]);
 async function resetTestData() {
   await svc.from("time_entries").delete().in("user_id", TEST_IDS);
   await svc.from("shifts").delete().in("user_id", TEST_IDS);
+  await svc.from("shift_requests").delete().in("user_id", TEST_IDS);
   await svc.from("payments").delete().in("user_id", TEST_IDS);
   await svc.from("wage_rates").delete().in("user_id", TEST_IDS).neq("effective_from", "2026-10-01");
 }
@@ -243,8 +244,8 @@ const yesterday = (() => { const d = new Date(Date.now() - 864e5); return d.toIS
     expect(await page.getByText(/Şifre/).first().isVisible(), "no password");
   });
   await quality(page, "profil");
-  await check("employee cannot open Onay / Program / Çalışanlar", async () => {
-    for (const p of ["/onay", "/program", "/calisanlar"]) {
+  await check("employee cannot open Onay / Çalışanlar", async () => {
+    for (const p of ["/onay", "/calisanlar"]) {
       await go(page, p);
       expect(!page.url().includes(p), `${p} reachable`);
     }
@@ -254,6 +255,113 @@ const yesterday = (() => { const d = new Date(Date.now() - 864e5); return d.toIS
     expect(page.url().includes("/giris"), page.url());
   });
   await ctx.close();
+}
+
+// ================= SHIFT REQUESTS: employee asks → yönetici decides → publish =================
+{
+  const amsToday = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Amsterdam" }).format(new Date());
+  const addDays = (d, n) => { const [y, m, dd] = d.split("-").map(Number); return new Date(Date.UTC(y, m - 1, dd + n, 12)).toISOString().slice(0, 10); };
+  const curMonday = addDays(amsToday, -((new Date(`${amsToday}T12:00:00Z`).getUTCDay() + 6) % 7));
+  // furthest week employees may ask for — far enough ahead to hold no real data
+  const W = addDays(curMonday, 56);
+  const { data: depijp } = await svc.from("branches").select("id").eq("slug", "de-pijp").single();
+  const { data: existingPub } = await svc.from("shift_week_publications").select("week_start").eq("branch_id", depijp.id).eq("week_start", W);
+  const { count: realShifts } = await svc.from("shifts").select("id", { count: "exact", head: true }).eq("branch_id", depijp.id).gte("work_date", W).lte("work_date", addDays(W, 6));
+  const safeWeek = !existingPub?.length && !realShifts;
+
+  const emp = await login("test.ahmet");
+  await check("employee: nav has Haftalık program", async () => {
+    expect(await emp.page.getByRole("link", { name: "Program", exact: true }).first().isVisible(), "no nav link");
+  });
+  await check("employee home: 'Gelecek hafta için gün iste' card", async () => {
+    expect(await emp.page.getByRole("link", { name: /Gelecek hafta için gün iste/ }).isVisible(), "no card");
+  });
+  await go(emp.page, `/program?hafta=${W}`);
+  await check("employee: request form for a future week", async () => {
+    expect(safeWeek, `week ${W} already has real data — skipped`);
+    await emp.page.getByRole("heading", { name: "Program isteğim" }).waitFor({ timeout: 10000 });
+  });
+  await check("employee: pick Pazartesi + Çarşamba 18:00, send", async () => {
+    await tap(emp.page.getByRole("button", { name: /^Pazartesi .* çalışabilirim$/ }));
+    await tap(emp.page.getByRole("button", { name: /^Çarşamba .* çalışabilirim$/ }));
+    await pickTime(emp.page, emp.page, /^Çarşamba başlangıç saati:/, "18:00");
+    await emp.page.getByLabel("Not (isteğe bağlı)").fill("Test notu");
+    await tap(emp.page.getByRole("button", { name: /Onaya gönder \(2 gün\)/ }));
+    await emp.page.getByText("2 gün onaya gönderildi").waitFor({ timeout: 10000 });
+  });
+  await check("employee: requests show Bekliyor after reload", async () => {
+    await go(emp.page, `/program?hafta=${W}`);
+    const n = await emp.page.getByText("Bekliyor", { exact: true }).count();
+    expect(n === 2, `${n} pending`);
+  });
+  await quality(emp.page, "employee program request");
+  await check("employee: cannot request current week / write directly / approve (DB)", async () => {
+    const anon = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+    await anon.auth.signInWithPassword({ email: "test.ahmet@staff.pizzadam.invalid", password: pw("test.ahmet") });
+    const { error } = await anon.rpc("submit_shift_requests", { p_branch: depijp.id, p_week: curMonday, p_days: [] });
+    expect(error && /gelecek haftalar/.test(error.message), error?.message ?? "accepted");
+    const { error: direct } = await anon.from("shift_requests").insert({ branch_id: depijp.id, user_id: idOf["test.ahmet"], work_date: W, start_time: "10:00" });
+    expect(direct, "direct insert allowed");
+    const { error: decide } = await anon.rpc("approve_pending_shift_requests", { p_branch: depijp.id, p_week: W });
+    expect(decide, "employee could approve");
+    const { error: pub } = await anon.from("shift_week_publications").insert({ branch_id: depijp.id, week_start: W });
+    expect(pub, "employee could publish");
+  });
+
+  const mgr = await login("yonetici.pijp");
+  await check("patron home: pending request reminder", async () => {
+    await mgr.page.getByText(/program isteği onay bekliyor/).waitFor({ timeout: 10000 });
+  });
+  await go(mgr.page, `/program?hafta=${W}`);
+  const panel = mgr.page.getByRole("region", { name: "Gelen istekler" });
+  const dayGroup = (day) => panel.locator("li", { has: mgr.page.getByRole("heading", { name: new RegExp(`^${day}`) }) });
+  const boardDay = (i) => mgr.page.locator("section[aria-label='Haftalık program'] > ol > li").nth(i);
+  await check("yönetici: sees both requests + Taslak badge + note", async () => {
+    await panel.getByText("2 istek onay bekliyor").waitFor({ timeout: 10000 });
+    expect(await mgr.page.getByText("Taslak", { exact: true }).first().isVisible(), "no Taslak");
+    expect(await panel.getByText("“Test notu”").first().isVisible(), "note missing");
+  });
+  await quality(mgr.page, "manager program requests");
+  await check("yönetici: Onayla puts Pazartesi on the board", async () => {
+    await tap(dayGroup("Pazartesi").getByRole("button", { name: "Onayla" }));
+    await dayGroup("Pazartesi").getByText("Onaylandı").waitFor({ timeout: 10000 });
+    await boardDay(0).getByRole("button", { name: /^Test Ahmet başlangıç saati: 16:45/ }).waitFor({ timeout: 10000 });
+  });
+  await check("yönetici: edit time approves Çarşamba at 18:30", async () => {
+    await pickTime(dayGroup("Çarşamba"), mgr.page, /^Test Ahmet başlangıç saati:/, "18:30");
+    await dayGroup("Çarşamba").getByText("Onaylandı").waitFor({ timeout: 10000 });
+    await boardDay(2).getByRole("button", { name: /^Test Ahmet başlangıç saati: 18:30/ }).waitFor({ timeout: 10000 });
+  });
+  await check("employee: decisions shown, unpublished board hidden", async () => {
+    await go(emp.page, `/program?hafta=${W}`);
+    expect(await emp.page.getByRole("heading", { name: "Program isteğim" }).isVisible(), "board visible before publish");
+    const n = await emp.page.getByText("Onaylandı", { exact: true }).count();
+    expect(n === 2, `${n} approved shown`);
+    const anon = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+    await anon.auth.signInWithPassword({ email: "test.ahmet@staff.pizzadam.invalid", password: pw("test.ahmet") });
+    const { data } = await anon.from("shifts").select("id").eq("branch_id", depijp.id).gte("work_date", W).lte("work_date", addDays(W, 6));
+    expect((data ?? []).length === 0, `${data?.length} draft shifts readable`);
+  });
+  await check("yönetici: Programı yayınla", async () => {
+    await tap(mgr.page.getByRole("button", { name: "Programı yayınla" }));
+    await mgr.page.getByRole("button", { name: "Yayından kaldır" }).waitFor({ timeout: 10000 });
+  });
+  await check("employee: published week on Program + home", async () => {
+    await go(emp.page, `/program?hafta=${W}`);
+    await emp.page.getByText("Test Ahmet (sen)").first().waitFor({ timeout: 10000 });
+    expect(await emp.page.getByText("18:30").first().isVisible(), "edited time missing");
+    await go(emp.page, `?hafta=${W}`);
+    await emp.page.getByText("Test Ahmet (sen)").first().waitFor({ timeout: 10000 });
+  });
+  await check("yönetici: Yayından kaldır hides it again", async () => {
+    await tap(mgr.page.getByRole("button", { name: "Yayından kaldır" }));
+    await mgr.page.getByRole("button", { name: "Programı yayınla" }).waitFor({ timeout: 10000 });
+    await go(emp.page, `?hafta=${W}`);
+    await emp.page.getByText("henüz yayınlanmadı").waitFor({ timeout: 10000 });
+  });
+  if (safeWeek) await svc.from("shift_week_publications").delete().eq("branch_id", depijp.id).eq("week_start", W);
+  await emp.ctx.close();
+  await mgr.ctx.close();
 }
 
 // ================= MANAGER: Onay + employee management =================
