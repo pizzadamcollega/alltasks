@@ -169,7 +169,15 @@ export default async function CalisanProfiliPage({
         )}
       </section>
 
-      <AccountSection userId={employeeId} branchSlug={branchSlug} active={employee.active} />
+      <AccountSection
+        userId={employeeId}
+        branchSlug={branchSlug}
+        active={employee.active}
+        fullName={employee.fullName}
+        username={employee.username}
+        startedOn={employee.startedOn}
+        canDelete={employeeId !== session.userId}
+      />
     </div>
   );
 }

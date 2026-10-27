@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { createEmployeeSchema, createManagerSchema } from "@/features/accounts/validation";
+import {
+  createEmployeeSchema,
+  createManagerSchema,
+  updateAccountSchema,
+} from "@/features/accounts/validation";
 
 const PIJP = "6f1c2a3b-4d5e-4f60-8a71-b2c3d4e5f601";
 const ZUID = "6f1c2a3b-4d5e-4f60-8a71-b2c3d4e5f602";
@@ -33,5 +37,25 @@ describe("createEmployeeSchema", () => {
 
   it("rejects an empty branch list", () => {
     expect(createEmployeeSchema.safeParse({ ...employee, branchIds: [] }).success).toBe(false);
+  });
+});
+
+describe("updateAccountSchema", () => {
+  const input = { fullName: "Ahmet Yılmaz", username: "ahmet.yilmaz", startedOn: "2026-10-01" };
+
+  it("accepts a full edit", () => {
+    expect(updateAccountSchema.parse(input)).toEqual(input);
+  });
+
+  it("turns an empty start date into null", () => {
+    expect(updateAccountSchema.parse({ ...input, startedOn: "" }).startedOn).toBeNull();
+  });
+
+  it("rejects an invalid username", () => {
+    expect(updateAccountSchema.safeParse({ ...input, username: "Ahmet Y" }).success).toBe(false);
+  });
+
+  it("rejects a too-short name", () => {
+    expect(updateAccountSchema.safeParse({ ...input, fullName: " A " }).success).toBe(false);
   });
 });

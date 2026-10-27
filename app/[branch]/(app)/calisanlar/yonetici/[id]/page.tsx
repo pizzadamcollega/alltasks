@@ -15,7 +15,7 @@ function initials(fullName: string): string {
     .join("");
 }
 
-/** Admin-only yönetici profile: identity + branch + the shared Hesap card (şifre / pasife al). */
+/** Admin-only yönetici profile: identity + branch + the shared Hesap card (düzenle / şifre / pasife al / sil). */
 export default async function YoneticiProfiliPage({
   params,
 }: {
@@ -63,7 +63,15 @@ export default async function YoneticiProfiliPage({
         </span>
       </section>
 
-      <AccountSection userId={managerId} branchSlug={branchSlug} active={manager.active} />
+      <AccountSection
+        userId={managerId}
+        branchSlug={branchSlug}
+        active={manager.active}
+        fullName={manager.fullName}
+        username={manager.username}
+        startedOn={manager.startedOn}
+        canDelete={managerId !== session.userId}
+      />
     </div>
   );
 }

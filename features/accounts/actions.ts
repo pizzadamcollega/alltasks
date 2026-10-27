@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { toErrorMessage } from "@/lib/errors";
-import { createEmployeeSchema, createManagerSchema } from "./validation";
+import { createEmployeeSchema, createManagerSchema, updateAccountSchema } from "./validation";
 import type { AppRole } from "@/types/database";
 
 export interface AccountActionResult {
@@ -199,4 +199,117 @@ export async function setActiveAction(
 
   revalidatePath(`/${branchSlug}/calisanlar`, "layout");
   return {};
+}
+
+/**
+ * S13 "Bilgileri düzenle". full_name / started_on would pass RLS, but the
+ * username is also the login e-mail and the profiles trigger only lets the
+ * server change it, so the whole update runs with the admin client after the
+ * `manages_user` check.
+ */
+export async function updateAccountAction(
+  userId: string,
+  branchSlug: string,
+  input: unknown,
+): Promise<AccountActionResult> {
+  const parsed = updateAccountSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Geçersiz bilgiler." };
+  }
+
+  const domain = process.env.STAFF_EMAIL_DOMAIN;
+  if (!domain) return { error: "Sunucu yapılandırması eksik." };
+
+  const supabase = await createClient();
+  const { data: allowed } = await supabase.rpc("manages_user", { p_user: userId });
+  if (!allowed) return { error: "Bu işlem için yetkin yok." };
+
+  const admin = createAdminClient();
+  const { data: current, error: loadError } = await admin
+    .from("profiles")
+    .select("username, full_name")
+    .eq("id", userId)
+    .single();
+  if (loadError || !current) return { error: toErrorMessage(loadError) };
+
+  const { fullName, username, startedOn } = parsed.data;
+  const usernameChanged = username !== current.username;
+
+  if (usernameChanged) {
+    // Auth answers a duplicate e-mail on update with a bare 500, so check first.
+    const { data: taken } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("username", username)
+      .maybeSingle();
+    if (taken) return { error: "Bu kullanıcı adı zaten alınmış." };
+  }
+
+  if (usernameChanged || fullName !== current.full_name) {
+    const { error: authError } = await admin.auth.admin.updateUserById(userId, {
+      ...(usernameChanged ? { email: `${username}@${domain}` } : {}),
+      user_metadata: { username, full_name: fullName },
+    });
+    if (authError) {
+      return {
+        error:
+          authError.code === "email_exists" ? "Bu kullanıcı adı zaten alınmış." : toErrorMessage(authError),
+      };
+    }
+  }
+
+  const { error: profileError } = await admin
+    .from("profiles")
+    .update({ full_name: fullName, username, started_on: startedOn })
+    .eq("id", userId);
+  if (profileError) {
+    // Keep the login e-mail and profiles.username in step.
+    await admin.auth.admin.updateUserById(userId, {
+      email: `${current.username}@${domain}`,
+      user_metadata: { username: current.username, full_name: current.full_name },
+    });
+    return {
+      error: profileError.code === "23505" ? "Bu kullanıcı adı zaten alınmış." : toErrorMessage(profileError),
+    };
+  }
+
+  revalidatePath(`/${branchSlug}/calisanlar`, "layout");
+  return {};
+}
+
+/**
+ * S13 "Hesabı sil" — permanent. Deleting the auth user cascades the profile and
+ * everything the user owns (entries, payments, wages, shifts); actor columns on
+ * other people's rows are set to null (migration 20261027000006).
+ */
+export async function deleteAccountAction(
+  userId: string,
+  branchSlug: string,
+  confirmUsername: unknown,
+): Promise<AccountActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user: caller },
+  } = await supabase.auth.getUser();
+  if (caller?.id === userId) return { error: "Kendi hesabını silemezsin." };
+
+  const { data: allowed } = await supabase.rpc("manages_user", { p_user: userId });
+  if (!allowed) return { error: "Bu işlem için yetkin yok." };
+
+  const admin = createAdminClient();
+  const { data: target } = await admin
+    .from("profiles")
+    .select("username, role")
+    .eq("id", userId)
+    .single();
+  if (!target) return { error: "Hesap bulunamadı." };
+  if (confirmUsername !== target.username) return { error: "Kullanıcı adı eşleşmiyor." };
+
+  const { error } = await admin.auth.admin.deleteUser(userId);
+  if (error) return { error: toErrorMessage(error) };
+
+  revalidatePath(`/${branchSlug}/calisanlar`, "layout");
+  redirect(
+    target.role === "patron" ? `/${branchSlug}/calisanlar?sekme=yoneticiler` : `/${branchSlug}/calisanlar`,
+  );
 }

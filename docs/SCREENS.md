@@ -171,8 +171,9 @@ Common to every `(app)` screen:
 - **Ödemeler ve avanslar**: list for the month with **Görünür/Gizli** switch each; *+ Ekle* sheet
   (tür, tutar, tarih, ay, not, görünür switch); delete in row menu.
 - **Son kayıtlar** (10) → link to Onay of that day.
-- **Hesap**: *Şifreyi sıfırla* (dialog: new temporary password, show once, copy button),
-  *Hesabı pasife al* / *Aktifleştir* (confirm). Admin only: branch membership editor.
+- **Hesap**: *Bilgileri düzenle* (dialog: Ad soyad, Kullanıcı adı, Başlangıç tarihi — D-44), *Şifreyi sıfırla* (dialog: new temporary password, show once, copy button),
+  *Hesabı pasife al* / *Aktifleştir* (confirm), *Hesabı sil* (permanent; "Kalıcı olarak sil" enables
+  only after typing the username; hidden on your own profile). Admin only: branch membership editor.
 
 ## S14 · Yeni çalışan — `/[branch]/calisanlar/yeni`
 

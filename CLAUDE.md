@@ -14,11 +14,11 @@ list are in **`docs/PANEL-FEATURE-PLAN.md` — read that file second, right afte
 
 - **Code**: ROADMAP Phase 0–5 implemented (scaffold, auth, employee home/Geçmiş, manager Onay,
   Çalışanlar/ücret/ödeme), plus a weekly shift board (`/program`, D-36) with employee day requests → patron approve/edit → publish (D-43), and hand-entered
-  hours (D-37). **There is no Başla/Bitir timer any more (D-38)** — the SPEC/SCREENS clock-in text
+  hours (D-37), plus account edit (username/name/start date) and permanent delete (D-44). **There is no Başla/Bitir timer any more (D-38)** — the SPEC/SCREENS clock-in text
   is superseded. Phase 6's request/draft/publish flow, swaps, leave, notifications,
   Raporlar/export, Ayarlar and PWA are **not built**. See PANEL-FEATURE-PLAN §8.
 - **Supabase**: real project `sfpjvslasvzigpyfftyf` (**eu-central-1**, Frankfurt — moved from
-  Seoul `fgpjzqybsijlasuoklen` on 2026-10-26, D-40), all 5 migrations (through 20261026000005) + seed applied, linked locally
+  Seoul `fgpjzqybsijlasuoklen` on 2026-10-26, D-40), migrations through 20261026000005 + seed applied (20261027000006 actor-FK `set null`, D-44, written — owner pushes), linked locally
   (`supabase link`). Vercel functions pinned to `fra1` (`vercel.json`). Staff e-mail domain `staff.pizzadam.invalid` confirmed working (D-28). Live accounts
   (2026-10-26, D-33..D-35): admin `furkan`; yöneticiler `yonetici.pijp` / `yonetici.zuid`; test
   çalışanlar `test.ahmet` / `test.murat`. Passwords live **only** in the owner's local `.env.local`

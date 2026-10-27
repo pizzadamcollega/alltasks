@@ -14,6 +14,16 @@ export const createEmployeeSchema = baseAccountSchema.extend({
   branchIds: z.array(z.uuid()).min(1, "En az bir şube seç."),
 });
 
+/** S13 "Bilgileri düzenle" — an empty start date clears it. */
+export const updateAccountSchema = z.object({
+  fullName: z.string().trim().min(2, "Ad soyad en az 2 karakter olmalı.").max(80),
+  username: usernameSchema,
+  startedOn: z
+    .union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)])
+    .nullish()
+    .transform((value) => value || null),
+});
+
 /** Admin-only "Yeni yönetici" — a patron manages exactly one branch (same rule as scripts/create-user.ts). */
 export const createManagerSchema = baseAccountSchema.extend({
   branchId: z.uuid("Bir şube seç."),

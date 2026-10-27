@@ -424,6 +424,74 @@ const yesterday = (() => { const d = new Date(Date.now() - 864e5); return d.toIS
   await ctx.close();
 }
 
+// ================= MANAGER: edit + permanently delete a throwaway employee (D-44) =================
+{
+  const domain = process.env.STAFF_EMAIL_DOMAIN;
+  const tmpPass = `Gecici-${Date.now()}`;
+  const { data: list } = await svc.auth.admin.listUsers({ perPage: 1000 });
+  for (const u of list.users.filter((u) => /^test\.(silinecek|silindi)@/.test(u.email ?? ""))) {
+    await svc.auth.admin.deleteUser(u.id);
+  }
+  const { data: branch } = await svc.from("branches").select("id").eq("slug", "de-pijp").single();
+  const { data: created } = await svc.auth.admin.createUser({
+    email: `test.silinecek@${domain}`, password: tmpPass, email_confirm: true,
+  });
+  const tmpId = created.user.id;
+  await svc.from("profiles").insert({ id: tmpId, full_name: "Test Silinecek", username: "test.silinecek", role: "employee", started_on: "2026-10-01" });
+  await svc.from("branch_members").insert({ user_id: tmpId, branch_id: branch.id });
+  await svc.from("payments").insert({ user_id: tmpId, branch_id: branch.id, month: "2026-10-01", kind: "advance", amount: 10, paid_on: "2026-10-02" });
+
+  const signIn = async (username) => {
+    const anon = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+    const { error } = await anon.auth.signInWithPassword({ email: `${username}@${domain}`, password: tmpPass });
+    return !error;
+  };
+
+  const { ctx, page } = await login("yonetici.pijp");
+  await go(page, `/calisanlar/${tmpId}`);
+  await check("Bilgileri düzenle: name + username + start date saved", async () => {
+    await tap(page.getByRole("button", { name: "Bilgileri düzenle" }));
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Ad soyad").fill("Test Silindi");
+    await dialog.getByLabel("Kullanıcı adı").fill("test.silindi");
+    await dialog.getByLabel("Başlangıç tarihi").fill("2026-09-15");
+    await dialog.getByRole("button", { name: "Kaydet" }).click();
+    await page.getByText("Bilgiler güncellendi").waitFor({ timeout: 10000 });
+    const { data: p } = await svc.from("profiles").select("full_name, username, started_on").eq("id", tmpId).single();
+    expect(p.full_name === "Test Silindi" && p.username === "test.silindi" && p.started_on === "2026-09-15", JSON.stringify(p));
+  });
+  await check("renamed user logs in with the new username only", async () => {
+    expect(await signIn("test.silindi"), "new username rejected");
+    expect(!(await signIn("test.silinecek")), "old username still works");
+  });
+  await check("Bilgileri düzenle: taken username is refused", async () => {
+    await tap(page.getByRole("button", { name: "Bilgileri düzenle" }));
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Kullanıcı adı").fill("test.ahmet");
+    await dialog.getByRole("button", { name: "Kaydet" }).click();
+    await page.getByText("Bu kullanıcı adı zaten alınmış.").waitFor({ timeout: 10000 });
+    await page.keyboard.press("Escape");
+  });
+  await check("Hesabı sil: button stays disabled until the username is typed", async () => {
+    await tap(page.getByRole("button", { name: "Hesabı sil" }));
+    const dialog = page.getByRole("dialog");
+    const del = dialog.getByRole("button", { name: "Kalıcı olarak sil" });
+    expect(await del.isDisabled(), "enabled without confirmation");
+    await dialog.getByLabel(/Onaylamak için/).fill("test.yanlis");
+    expect(await del.isDisabled(), "enabled with a wrong username");
+    await dialog.getByLabel(/Onaylamak için/).fill("test.silindi");
+    await del.click();
+    await page.waitForURL(/\/calisanlar$/, { timeout: 15000 });
+  });
+  await check("deleted account is gone (profile, payments, login)", async () => {
+    const { data: p } = await svc.from("profiles").select("id").eq("id", tmpId).maybeSingle();
+    const { data: pay } = await svc.from("payments").select("id").eq("user_id", tmpId);
+    expect(!p && pay.length === 0, "rows left behind");
+    expect(!(await signIn("test.silindi")), "deleted user can still log in");
+  });
+  await ctx.close();
+}
+
 // ================= ADMIN =================
 {
   const { ctx, page } = await login("furkan");
