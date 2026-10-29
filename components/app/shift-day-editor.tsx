@@ -87,10 +87,12 @@ export function ShiftDayEditor({
                 onClick={() => toggleCashier(shift.userId, shift.fullName, shift.isCashier)}
                 className={cn(
                   "h-11 shrink-0 px-2 text-xs font-bold",
-                  shift.isCashier ? "border-pz-accent bg-pz-accent-soft text-pz-accent" : "text-pz-muted",
+                  shift.isCashier
+                    ? "border-pz-accent bg-pz-accent text-pz-on-accent hover:bg-pz-accent/90 hover:text-pz-on-accent"
+                    : "border-dashed text-pz-muted",
                 )}
               >
-                {shift.isCashier ? "Kasacı ✓" : "Kasacı"}
+                {shift.isCashier ? "Kasacı ✓" : "Kasacı yap"}
               </Button>
             ) : null}
             <Button

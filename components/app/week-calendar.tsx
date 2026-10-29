@@ -35,6 +35,8 @@ export function WeekCalendar({
   actions,
   badge,
   notice,
+  minMonday,
+  maxMonday,
 }: {
   days: ShiftDay[];
   today: string;
@@ -48,10 +50,20 @@ export function WeekCalendar({
   badge?: React.ReactNode;
   /** Replaces the day list, e.g. while a future week is not published yet. */
   notice?: React.ReactNode;
+  /** Limits for the ‹ › links (see `WeekNav`). */
+  minMonday?: string;
+  maxMonday?: string;
 }) {
   return (
     <section aria-label="Haftalık program" className="flex flex-col gap-3">
-      <WeekNav monday={monday} today={today} basePath={basePath} badge={badge} />
+      <WeekNav
+        monday={monday}
+        today={today}
+        basePath={basePath}
+        badge={badge}
+        minMonday={minMonday}
+        maxMonday={maxMonday}
+      />
 
       {actions}
 

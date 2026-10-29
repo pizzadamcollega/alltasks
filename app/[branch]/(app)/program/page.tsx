@@ -10,6 +10,8 @@ import { CopyWeekButton } from "./copy-week-button";
 
 /** Employees may ask for the next 8 weeks (mirrors `submit_shift_requests`). */
 const REQUEST_WEEKS_AHEAD = 8;
+/** How far back an employee can page through the board. */
+const PAST_WEEKS = 8;
 
 export default async function ProgramPage({
   params,
@@ -41,17 +43,20 @@ function PageTitle({ branchName, sub }: { branchName: string; sub: string }) {
 async function EmployeeProgram({ session, hafta }: { session: SessionContext; hafta?: string }) {
   const { branch, userId } = session;
   const today = todayInAmsterdam();
-  const nextMonday = addDaysToDate(weekStart(today), 7);
+  const thisMonday = weekStart(today);
+  const nextMonday = addDaysToDate(thisMonday, 7);
+  const firstMonday = addDaysToDate(thisMonday, -7 * PAST_WEEKS);
   const lastMonday = addDaysToDate(nextMonday, 7 * (REQUEST_WEEKS_AHEAD - 1));
   const asked = weekFromParam(hafta, nextMonday);
-  const monday = asked < nextMonday ? nextMonday : asked > lastMonday ? lastMonday : asked;
+  const monday = asked < firstMonday ? firstMonday : asked > lastMonday ? lastMonday : asked;
 
   const supabase = await createClient();
   const [requests, publication] = await Promise.all([
     getWeekRequests(supabase, branch.id, monday),
     getWeekPublication(supabase, branch.id, monday),
   ]);
-  const days = publication ? await getWeekShifts(supabase, branch.id, monday) : null;
+  // this week and earlier are always visible (shifts_select); later weeks once published
+  const days = monday <= thisMonday || publication ? await getWeekShifts(supabase, branch.id, monday) : null;
   const basePath = `/${branch.slug}/program`;
 
   return (
@@ -67,7 +72,9 @@ async function EmployeeProgram({ session, hafta }: { session: SessionContext; ha
           monday={monday}
           basePath={basePath}
           currentUserId={userId}
-          badge={<PublishBadge published />}
+          badge={monday > thisMonday ? <PublishBadge published /> : null}
+          minMonday={firstMonday}
+          maxMonday={lastMonday}
         />
       ) : (
         <section aria-label="Program isteği" className="flex flex-col gap-3">
@@ -77,7 +84,7 @@ async function EmployeeProgram({ session, hafta }: { session: SessionContext; ha
             basePath={basePath}
             title="Program isteğim"
             homeMonday={nextMonday}
-            minMonday={nextMonday}
+            minMonday={firstMonday}
             maxMonday={lastMonday}
           />
           <ShiftRequestForm key={monday} branchId={branch.id} branchSlug={branch.slug} monday={monday} requests={requests} />
