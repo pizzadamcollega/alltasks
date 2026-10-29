@@ -22,14 +22,14 @@ if (!/127\.0\.0\.1|localhost/.test(url)) {
 const db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 const PASSWORD = 'Test1234!';
 
-type Seed = { username: string; name: string; role: 'admin' | 'patron' | 'employee'; branches: string[]; rate?: number };
+type Seed = { username: string; name: string; role: 'admin' | 'patron' | 'employee'; branches: string[]; rate?: number; duties?: string[] };
 const USERS: Seed[] = [
   { username: 'admin', name: 'Admin Test', role: 'admin', branches: [] },
   { username: 'patron.pijp', name: 'Patron De Pijp', role: 'patron', branches: ['de-pijp'] },
   { username: 'patron.zuid', name: 'Patron Zuid', role: 'patron', branches: ['zuid'] },
-  { username: 'ahmet', name: 'Ahmet Yılmaz', role: 'employee', branches: ['de-pijp'], rate: 13 },
+  { username: 'ahmet', name: 'Ahmet Yılmaz', role: 'employee', branches: ['de-pijp'], rate: 13, duties: ['bezorgd', 'usta'] },
   { username: 'elif', name: 'Elif Kaya', role: 'employee', branches: ['de-pijp', 'zuid'], rate: 12.5 },
-  { username: 'murat', name: 'Murat Demir', role: 'employee', branches: ['de-pijp'], rate: 14 },
+  { username: 'murat', name: 'Murat Demir', role: 'employee', branches: ['de-pijp'], rate: 14, duties: ['kasaci'] },
   { username: 'can', name: 'Can Öztürk', role: 'employee', branches: ['de-pijp'], rate: 13.5 },
   { username: 'sena', name: 'Sena Aksoy', role: 'employee', branches: ['de-pijp'], rate: 13 },
   { username: 'deniz', name: 'Deniz Arslan', role: 'employee', branches: ['de-pijp'], rate: 12.75 },
@@ -63,7 +63,7 @@ async function main() {
     const { data, error } = await db.auth.admin.createUser({ email, password: PASSWORD, email_confirm: true });
     if (error) throw error;
     ids[u.username] = data.user.id;
-    await db.from('profiles').insert({ id: data.user.id, full_name: u.name, username: u.username, role: u.role, started_on: '2026-03-01' });
+    await db.from('profiles').insert({ id: data.user.id, full_name: u.name, username: u.username, role: u.role, started_on: '2026-03-01', duties: u.role === 'employee' ? (u.duties ?? ['bezorgd']) : [] });
     if (u.branches.length)
       await db.from('branch_members').insert(u.branches.map((b) => ({ user_id: data.user.id, branch_id: branchId(b) })));
     if (u.rate) await db.from('wage_rates').insert({ user_id: data.user.id, hourly_rate: u.rate, effective_from: '2026-01-01' });

@@ -6,8 +6,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { toErrorMessage } from "@/lib/errors";
-import { createEmployeeSchema, createManagerSchema, updateAccountSchema } from "./validation";
-import type { AppRole } from "@/types/database";
+import { createEmployeeSchema, createManagerSchema, dutiesSchema, updateAccountSchema } from "./validation";
+import type { AppRole, StaffDuty } from "@/types/database";
 
 export interface AccountActionResult {
   error?: string;
@@ -20,6 +20,7 @@ interface StaffAccountInput {
   role: AppRole;
   branchIds: string[];
   startedOn?: string;
+  duties?: StaffDuty[];
   wage?: { hourlyRate: number; createdBy: string | null };
 }
 
@@ -35,7 +36,7 @@ async function createStaffAccount(
   if (!domain) return { error: "Sunucu yapılandırması eksik." };
 
   const admin = createAdminClient();
-  const { fullName, username, password, role, branchIds, startedOn, wage } = input;
+  const { fullName, username, password, role, branchIds, startedOn, duties, wage } = input;
 
   const { data: created, error: createError } = await admin.auth.admin.createUser({
     email: `${username}@${domain}`,
@@ -63,6 +64,7 @@ async function createStaffAccount(
     username,
     role,
     started_on: startedOn ?? null,
+    duties: duties ?? [],
   });
   if (profileError) return rolledBack();
 
@@ -108,7 +110,7 @@ export async function createEmployeeAction(
     data: { user: manager },
   } = await supabase.auth.getUser();
 
-  const { fullName, username, password, hourlyRate, startedOn } = parsed.data;
+  const { fullName, username, password, hourlyRate, startedOn, duties } = parsed.data;
   const result = await createStaffAccount({
     fullName,
     username,
@@ -116,6 +118,7 @@ export async function createEmployeeAction(
     role: "employee",
     branchIds,
     startedOn,
+    duties,
     wage: { hourlyRate, createdBy: manager?.id ?? null },
   });
   if ("error" in result) return result;
@@ -150,6 +153,34 @@ export async function createManagerAction(
 
   revalidatePath(`/${branchSlug}/calisanlar`);
   redirect(`/${branchSlug}/calisanlar?sekme=yoneticiler`);
+}
+
+/**
+ * D-45 "Görevler". Runs with the caller's own session: `profiles_update` RLS
+ * (manages_user) and `profiles_before_update` (no self-service, min one duty)
+ * decide, not this action.
+ */
+export async function setDutiesAction(
+  userId: string,
+  branchSlug: string,
+  duties: unknown,
+): Promise<AccountActionResult> {
+  const parsed = dutiesSchema.safeParse(duties);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Geçersiz görev." };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({ duties: parsed.data })
+    .eq("id", userId)
+    .select("id");
+  if (error) return { error: toErrorMessage(error) };
+  if (!data || data.length === 0) return { error: "Bu işlem için yetkin yok." };
+
+  revalidatePath(`/${branchSlug}`, "layout");
+  return {};
 }
 
 const newPasswordSchema = z.string().min(8, "Şifre en az 8 karakter olmalı.");

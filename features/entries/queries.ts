@@ -18,6 +18,8 @@ type SelectedEntryEarningsRow = Pick<
   | "manual"
   | "hourly_rate"
   | "amount"
+  | "cashier_approved_by"
+  | "return_note"
 >;
 
 export interface MonthlyEarnings {
@@ -73,10 +75,13 @@ export interface EntrySummary {
   manual: boolean;
   hourlyRate: number | null;
   amount: number | null;
+  /** Profile id of the kasacı who approved it (D-46); names are looked up by the screen. */
+  cashierApprovedBy: string | null;
+  returnNote: string | null;
 }
 
 const ENTRY_EARNINGS_COLUMNS =
-  "id, work_date, start_at, end_at, rounded_minutes, status, edited_by_employee, edited_by_manager, manual, hourly_rate, amount";
+  "id, work_date, start_at, end_at, rounded_minutes, status, edited_by_employee, edited_by_manager, manual, hourly_rate, amount, cashier_approved_by, return_note";
 
 function mapEntry(row: SelectedEntryEarningsRow): EntrySummary {
   return {
@@ -91,7 +96,41 @@ function mapEntry(row: SelectedEntryEarningsRow): EntrySummary {
     manual: row.manual,
     hourlyRate: row.hourly_rate,
     amount: row.amount,
+    cashierApprovedBy: row.cashier_approved_by,
+    returnNote: row.return_note,
   };
+}
+
+/** The caller's running entry (started, not finished yet), if any — at most one per user. */
+export async function getOpenEntry(
+  supabase: Client,
+  userId: string,
+  branchId: string,
+): Promise<EntrySummary | null> {
+  const { data } = await supabase
+    .from("entry_earnings")
+    .select(ENTRY_EARNINGS_COLUMNS)
+    .eq("user_id", userId)
+    .eq("branch_id", branchId)
+    .eq("status", "open")
+    .maybeSingle();
+  return data ? mapEntry(data) : null;
+}
+
+/** Entries a reviewer sent back, oldest first, so the employee fixes and resends them. */
+export async function getReturnedEntries(
+  supabase: Client,
+  userId: string,
+  branchId: string,
+): Promise<EntrySummary[]> {
+  const { data } = await supabase
+    .from("entry_earnings")
+    .select(ENTRY_EARNINGS_COLUMNS)
+    .eq("user_id", userId)
+    .eq("branch_id", branchId)
+    .eq("status", "returned")
+    .order("start_at", { ascending: true });
+  return (data ?? []).map(mapEntry);
 }
 
 export async function getEntriesInRange(

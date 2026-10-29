@@ -187,6 +187,33 @@ export function manualEntryRange(
   };
 }
 
+/** Amsterdam wall-clock "HH:mm" right now, floored to the 5-minute grid the time picker offers. */
+export function nowTimeAmsterdam(now: Date = new Date()): string {
+  const [h, m] = format(new TZDate(now, TZ), "HH:mm").split(":").map(Number);
+  return `${String(h).padStart(2, "0")}:${String(m - (m % 5)).padStart(2, "0")}`;
+}
+
+/**
+ * "Mesaiye başla" with an editable time: the latest instant with that
+ * wall-clock time that is not in the future — typing 23:50 at 00:05 means
+ * last night, not tonight. 5 minutes of slack, same as the SQL trigger.
+ */
+export function startTimeToISO(time: string, now: Date = new Date()): string {
+  const today = format(new TZDate(now, TZ), "yyyy-MM-dd");
+  const iso = amsterdamLocalToISO(`${today}T${time}`);
+  if (new Date(iso).getTime() > now.getTime() + 5 * 60 * 1000) {
+    return amsterdamLocalToISO(`${addDaysToDate(today, -1)}T${time}`);
+  }
+  return iso;
+}
+
+/** "Mesaiyi bitir": the first instant with that wall-clock time after the start (past midnight = next day). */
+export function endTimeToISO(startAt: string, time: string): string {
+  const startLocal = format(new TZDate(new Date(startAt), TZ), "yyyy-MM-dd'T'HH:mm");
+  const [startDate, startTime] = startLocal.split("T");
+  return manualEntryRange(startDate, startTime, time).endAt;
+}
+
 /** `?hafta=YYYY-MM-DD` -> that week's Monday; anything else -> the current week's Monday. */
 export function weekFromParam(param: string | undefined, today: string): string {
   return param && /^\d{4}-\d{2}-\d{2}$/.test(param) ? weekStart(param) : weekStart(today);

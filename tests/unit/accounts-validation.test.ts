@@ -27,7 +27,7 @@ describe("createManagerSchema", () => {
 });
 
 describe("createEmployeeSchema", () => {
-  const employee = { ...base, hourlyRate: "14", startedOn: "2026-10-26" };
+  const employee = { ...base, hourlyRate: "14", startedOn: "2026-10-26", duties: ["bezorgd"] };
 
   it("accepts several branches and coerces the rate", () => {
     const parsed = createEmployeeSchema.safeParse({ ...employee, branchIds: [PIJP, ZUID] });
@@ -37,6 +37,18 @@ describe("createEmployeeSchema", () => {
 
   it("rejects an empty branch list", () => {
     expect(createEmployeeSchema.safeParse({ ...employee, branchIds: [] }).success).toBe(false);
+  });
+
+  it("requires at least one duty (D-45)", () => {
+    expect(createEmployeeSchema.safeParse({ ...employee, branchIds: [PIJP], duties: [] }).success).toBe(false);
+  });
+
+  it("rejects an unknown duty and de-duplicates", () => {
+    expect(createEmployeeSchema.safeParse({ ...employee, branchIds: [PIJP], duties: ["patron"] }).success).toBe(
+      false,
+    );
+    const parsed = createEmployeeSchema.safeParse({ ...employee, branchIds: [PIJP], duties: ["usta", "usta", "kasaci"] });
+    expect(parsed.data?.duties).toEqual(["usta", "kasaci"]);
   });
 });
 

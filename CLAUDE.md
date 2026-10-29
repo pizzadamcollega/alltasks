@@ -14,11 +14,13 @@ list are in **`docs/PANEL-FEATURE-PLAN.md` — read that file second, right afte
 
 - **Code**: ROADMAP Phase 0–5 implemented (scaffold, auth, employee home/Geçmiş, manager Onay,
   Çalışanlar/ücret/ödeme), plus a weekly shift board (`/program`, D-36) with employee day requests → patron approve/edit → publish (D-43), and hand-entered
-  hours (D-37), plus account edit (username/name/start date) and permanent delete (D-44). **There is no Başla/Bitir timer any more (D-38)** — the SPEC/SCREENS clock-in text
-  is superseded. Phase 6's request/draft/publish flow, swaps, leave, notifications,
+  hours (D-37), plus account edit (username/name/start date) and permanent delete (D-44), plus staff duties
+  (kasacı/bezorgd/usta), two-step hours (Mesaiye başla → Mesaiyi bitir), kasacı → yönetici review,
+  material list, cash count and day close with summary/print/PDF (D-45..D-49, PANEL-FEATURE-PLAN §11).
+  Hand-entered hours are **no longer auto-approved** (D-46 supersedes D-37). Phase 6's request/draft/publish flow, swaps, leave, notifications,
   Raporlar/export, Ayarlar and PWA are **not built**. See PANEL-FEATURE-PLAN §8.
 - **Supabase**: real project `sfpjvslasvzigpyfftyf` (**eu-central-1**, Frankfurt — moved from
-  Seoul `fgpjzqybsijlasuoklen` on 2026-10-26, D-40), migrations through 20261026000005 + seed applied (20261027000006 actor-FK `set null`, D-44, written — owner pushes), linked locally
+  Seoul `fgpjzqybsijlasuoklen` on 2026-10-26, D-40), migrations through 20261026000005 + seed applied (20261027000006 actor-FK `set null`, D-44, and 20261029000007/000008 day-close workflow, D-45..D-49, written — owner pushes), linked locally
   (`supabase link`). Vercel functions pinned to `fra1` (`vercel.json`). Staff e-mail domain `staff.pizzadam.invalid` confirmed working (D-28). Live accounts
   (2026-10-26, D-33..D-35): admin `furkan`; yöneticiler `yonetici.pijp` / `yonetici.zuid`; test
   çalışanlar `test.ahmet` / `test.murat`. Passwords live **only** in the owner's local `.env.local`
@@ -31,6 +33,8 @@ list are in **`docs/PANEL-FEATURE-PLAN.md` — read that file second, right afte
   and `APP_BASE_URL` via `vercel env add ... production` and redeploying with `vercel --prod`
   (`SUPABASE_SERVICE_ROLE_KEY` etc. were already present from the Vercel↔Supabase marketplace
   integration). Re-verify anytime with `node tests/manual/prod-login-check.mjs`.
+- **DB test without Docker**: `npm run test:workflow` runs every migration on PGlite and walks the
+  kasacı/day-close flow as real roles (RLS on).
 - **Not runnable here**: this environment has no Docker, so `npm run test:db`,
   `npm run db:seed-users` + `npm run test:e2e`, and a real `npm run db:types` have never actually
   executed — only lint/typecheck/unit-test/build were verified. `SUPABASE_DB_URL` (session-pooler

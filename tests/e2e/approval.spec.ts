@@ -2,7 +2,8 @@ import { test, expect } from "@playwright/test";
 import { login } from "./helpers";
 
 test.describe("approval", () => {
-  test("manager can approve a pending entry one at a time", async ({ page }) => {
+  // D-46: the yönetici's Onayla only appears once the kasacı approved (or on the kasacı's own entry)
+  test("manager can approve a kasacı-approved entry one at a time", async ({ page }) => {
     await login(page, "de-pijp", "patron.pijp");
     await page.goto("/de-pijp/onay");
 
@@ -17,10 +18,10 @@ test.describe("approval", () => {
     await login(page, "de-pijp", "patron.pijp");
     await page.goto("/de-pijp/onay");
 
-    const bulk = page.getByRole("button", { name: /Kalan \d+ kaydı onayla/ });
+    const bulk = page.getByRole("button", { name: /Kasacının onayladığı saatleri onayla/ });
     if (await bulk.isVisible()) {
       await bulk.click();
-      await expect(page.getByRole("button", { name: "Tümü onaylandı" })).toBeVisible();
+      await expect(bulk).toHaveCount(0);
     }
   });
 

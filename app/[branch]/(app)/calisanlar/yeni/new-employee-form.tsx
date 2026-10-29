@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DutyCheckboxes } from "@/components/app/duty-checkboxes";
 import { suggestUsername } from "@/lib/validation/username";
 import { createEmployeeAction, type AccountActionResult } from "@/features/accounts/actions";
 import type { BranchOption } from "@/features/accounts/queries";
@@ -38,6 +39,7 @@ export function NewEmployeeForm({
       password: formData.get("password"),
       hourlyRate: formData.get("hourlyRate"),
       startedOn: formData.get("startedOn"),
+      duties: formData.getAll("duties"),
     });
   }
 
@@ -82,6 +84,7 @@ export function NewEmployeeForm({
         <Label htmlFor="startedOn">Başlangıç tarihi</Label>
         <Input id="startedOn" name="startedOn" type="date" defaultValue={todayInAmsterdam()} required />
       </div>
+      <DutyCheckboxes />
       {branches ? (
         <fieldset className="flex flex-col gap-1.5">
           <legend className="mb-1.5 text-sm font-medium">Şubeler</legend>

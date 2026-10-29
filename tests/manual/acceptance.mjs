@@ -29,6 +29,13 @@ const { data: profiles } = await svc.from("profiles").select("id, username");
 const idOf = Object.fromEntries(profiles.map((p) => [p.username, p.id]));
 const TEST_IDS = ["test.ahmet", "test.murat"].map((u) => idOf[u]);
 async function resetTestData() {
+  // D-49: a closed day locks its rows, so drop the test closings first (only days test.murat counted)
+  const { data: testCash } = await svc.from("cash_counts").select("branch_id, work_date").in("user_id", TEST_IDS);
+  for (const c of testCash ?? []) {
+    await svc.from("day_closings").delete().eq("branch_id", c.branch_id).eq("work_date", c.work_date);
+  }
+  await svc.from("cash_counts").delete().in("user_id", TEST_IDS);
+  await svc.from("material_reports").delete().in("user_id", TEST_IDS);
   await svc.from("time_entries").delete().in("user_id", TEST_IDS);
   await svc.from("shifts").delete().in("user_id", TEST_IDS);
   await svc.from("shift_requests").delete().in("user_id", TEST_IDS);
@@ -36,6 +43,9 @@ async function resetTestData() {
   await svc.from("wage_rates").delete().in("user_id", TEST_IDS).neq("effective_from", "2026-10-01");
 }
 await resetTestData();
+// D-45 duties: test.ahmet bezorgd + usta, test.murat kasacı
+await svc.from("profiles").update({ duties: ["bezorgd", "usta"] }).eq("id", idOf["test.ahmet"]);
+await svc.from("profiles").update({ duties: ["kasaci"] }).eq("id", idOf["test.murat"]);
 
 // ---------- per-page quality checks ----------
 const pageErrors = [];
@@ -178,7 +188,13 @@ const yesterday = (() => { const d = new Date(Date.now() - 864e5); return d.toIS
 // ================= EMPLOYEE =================
 {
   const { ctx, page } = await login("test.ahmet");
-  await check("employee home: no Başla/Bitir", async () => expect((await page.getByRole("button", { name: /^(Başla|Bitir)$/ }).count()) === 0, "timer visible"));
+  await check("employee home: Mesaiye başla card (D-46)", async () =>
+    expect(await page.getByRole("button", { name: "Mesaiye başla" }).isVisible(), "no start button"));
+  await check("usta sees the material card", async () =>
+    expect(await page.getByRole("heading", { name: "Eksik / fazla malzeme" }).isVisible(), "no material card"));
+  // the hand-entry form now lives under "Unuttuğun bir günü ekle"
+  const openManual = () => page.getByText("Unuttuğun bir günü ekle").click();
+  await openManual();
   await check("employee home: calendar shows own shift (sen) + Bugün", async () => {
     const board = page.getByRole("region", { name: "Haftalık program" });
     expect(await board.getByText("Test Ahmet (sen)").isVisible(), "own shift missing");
@@ -211,8 +227,12 @@ const yesterday = (() => { const d = new Date(Date.now() - 864e5); return d.toIS
     await page.getByText("Kayıt eklendi").waitFor({ timeout: 15000 });
     await page.getByText("Elle girildi").first().waitFor({ timeout: 10000 });
   });
+  await check("manual entry: goes to Bekliyor, not straight to approved (D-46)", async () => {
+    await page.getByText("Bekliyor").first().waitFor({ timeout: 10000 });
+  });
   await check("manual entry: amount uses the wage (8 sa 30 dk = €119)", async () => {
     await page.reload();
+    await openManual();
     await page.getByText("€119,00").first().waitFor({ timeout: 10000 });
   });
   await check("manual entry: overlap refused with message", async () => {
@@ -224,6 +244,7 @@ const yesterday = (() => { const d = new Date(Date.now() - 864e5); return d.toIS
   });
   await check("manual entry: form cleared after save", async () => {
     await page.reload();
+    await openManual();
     expect(await page.getByRole("button", { name: /^Bitiş: seçilmedi/ }).isVisible(), "not cleared");
   });
   await check("manual entry: 'Başka gün' opens a date input", async () =>
@@ -364,6 +385,157 @@ const yesterday = (() => { const d = new Date(Date.now() - 864e5); return d.toIS
   await mgr.ctx.close();
 }
 
+// ================= KASACI → YÖNETİCİ → GÜN SONU (D-45..D-49) =================
+{
+  const ams = (n = 0) => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Amsterdam" }).format(new Date(Date.now() + n * 864e5));
+  const T = ams(0);
+  const Y = ams(-1);
+  const { data: depijp } = await svc.from("branches").select("id").eq("slug", "de-pijp").single();
+  // never take the kasacı flag from a real person
+  const { data: realCashiers } = await svc
+    .from("shifts")
+    .select("work_date")
+    .eq("branch_id", depijp.id)
+    .eq("is_cashier", true)
+    .in("work_date", [Y, T])
+    .not("user_id", "in", `(${TEST_IDS.join(",")})`);
+  const safe = !realCashiers?.length;
+  if (safe) {
+    for (const d of [Y, T]) {
+      await svc.from("shifts").upsert(
+        { branch_id: depijp.id, user_id: idOf["test.murat"], work_date: d, start_time: "16:00", is_cashier: true },
+        { onConflict: "branch_id,user_id,work_date" },
+      );
+    }
+  }
+  const signIn = async (user) => {
+    const c = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+    await c.auth.signInWithPassword({ email: `${user}@staff.pizzadam.invalid`, password: pw(user) });
+    return c;
+  };
+  const { data: ahmetEntry } = await svc
+    .from("time_entries")
+    .select("id")
+    .eq("user_id", idOf["test.ahmet"])
+    .eq("work_date", Y)
+    .limit(1)
+    .maybeSingle();
+
+  const kasa = await login("test.murat");
+  await check("kasacı: home says Bugün kasacısın", async () => {
+    expect(safe, "a real kasacı is set for today — skipped");
+    await kasa.page.getByText("Bugün kasacısın").waitFor({ timeout: 10000 });
+  });
+  await check("kasacı: nav has Kasa", async () =>
+    expect(await kasa.page.getByRole("link", { name: "Kasa", exact: true }).first().isVisible(), "no nav link"));
+
+  await check("DB: yönetici cannot skip the kasacı", async () => {
+    const mgrDb = await signIn("yonetici.pijp");
+    const { data } = await mgrDb.rpc("manager_approve", { p_kind: "entry", p_ids: [ahmetEntry.id] });
+    expect(data === 0, `approved ${data}`);
+  });
+  await check("DB: a non-kasacı cannot cashier-approve, count the till or self-assign a duty", async () => {
+    const empDb = await signIn("test.ahmet");
+    const { data } = await empDb.rpc("cashier_approve", { p_kind: "entry", p_ids: [ahmetEntry.id] });
+    expect(data === 0, `approved ${data}`);
+    const { error } = await empDb.from("cash_counts").insert({ branch_id: depijp.id, work_date: T, online: 1 });
+    expect(error, "employee wrote a cash count");
+    const { error: self } = await empDb.from("profiles").update({ duties: ["kasaci"] }).eq("id", idOf["test.ahmet"]);
+    expect(self, "employee gave themselves a duty");
+  });
+
+  await go(kasa.page, `/kasa?gun=${Y}`);
+  await check("kasacı: yesterday's entry of Test Ahmet is waiting", async () => {
+    await kasa.page.getByText("Test Ahmet").first().waitFor({ timeout: 10000 });
+  });
+  await check("kasacı: Geri gönder with a note", async () => {
+    const card = kasa.page.locator("li").filter({ hasText: "Test Ahmet" }).first();
+    await tap(card.getByRole("button", { name: "Geri gönder" }));
+    const dialog = kasa.page.getByRole("dialog");
+    await dialog.getByLabel("Sebep").fill("Bitiş saatini kontrol et");
+    await dialog.getByRole("button", { name: "Geri gönder" }).click();
+    await kasa.page.getByText("geri gönderildi").first().waitFor({ timeout: 10000 });
+  });
+
+  const emp = await login("test.ahmet");
+  await check("employee: returned entry shows the note and resends", async () => {
+    await emp.page.getByText("Düzeltmen gereken kayıtlar").waitFor({ timeout: 10000 });
+    await emp.page.getByText("Not: Bitiş saatini kontrol et").first().click();
+    await emp.page.getByRole("dialog").getByRole("button", { name: "Kaydet" }).click();
+    await emp.page.getByText("Düzeltmen gereken kayıtlar").waitFor({ state: "detached", timeout: 10000 });
+  });
+  await check("usta: material list S −2 sent", async () => {
+    await tap(emp.page.getByRole("button", { name: "Hamur S azalt" }));
+    await tap(emp.page.getByRole("button", { name: "Hamur S azalt" }));
+    await emp.page.getByLabel("Diğer eksikler / not").fill("Test: mozzarella az");
+    await tap(emp.page.getByRole("button", { name: "Onaya gönder", exact: true }));
+    await emp.page.getByText("kasacı onayına gönderildi").waitFor({ timeout: 10000 });
+  });
+  await quality(emp.page, "employee home (usta)");
+  await emp.ctx.close();
+
+  await go(kasa.page, `/kasa?gun=${Y}`);
+  await check("kasacı: approves the resent hours", async () => {
+    await tap(kasa.page.getByRole("button", { name: /Bekleyen saatleri onayla/ }));
+    await kasa.page.getByText("Kasacı onayladı").first().waitFor({ timeout: 10000 });
+  });
+  await go(kasa.page, "/kasa");
+  await check("kasacı: approves the material list", async () => {
+    await tap(kasa.page.getByRole("button", { name: /Malzeme listesini onayla/ }));
+    await kasa.page.getByText("Kasacı onayladı").first().waitFor({ timeout: 10000 });
+  });
+  await check("kasacı: cash count with live total (€962,75)", async () => {
+    await kasa.page.getByLabel("Kasa açılış parası (€)").fill("150");
+    await kasa.page.getByLabel("Online (€)").fill("812,50");
+    await kasa.page.getByLabel("Kiosk (€)").fill("100,25");
+    await kasa.page.getByLabel("Contant (€)").fill("50");
+    await kasa.page.getByText("€962,75").waitFor({ timeout: 5000 });
+    await tap(kasa.page.getByRole("button", { name: "Yöneticiye gönder" }));
+    await kasa.page.getByText("yönetici onayına gönderildi").waitFor({ timeout: 10000 });
+  });
+  await quality(kasa.page, "kasa");
+  await kasa.ctx.close();
+
+  const mgr = await login("yonetici.pijp");
+  await go(mgr.page, `/onay?gun=${Y}`);
+  await check("Onay: hours arrive with Kasacı onayladı · Test Murat", async () => {
+    await mgr.page.getByText("Kasacı onayladı · Test Murat").first().waitFor({ timeout: 10000 });
+  });
+  await go(mgr.page, `/onay?gun=${T}`);
+  await check("Onay: approve material + cash, then the summary opens", async () => {
+    const mat = mgr.page.locator("div.rounded-card").filter({ hasText: "Hamur S" }).first();
+    await tap(mat.getByRole("button", { name: "Onayla" }));
+    await mat.getByText("Onaylandı").waitFor({ timeout: 10000 });
+    const cash = mgr.page.locator("div.rounded-card").filter({ hasText: "Contant" }).first();
+    await tap(cash.getByRole("button", { name: "Onayla" }));
+    await mgr.page.getByRole("dialog").getByText("Tüm onaylar tamam").waitFor({ timeout: 15000 });
+    await mgr.page.getByRole("dialog").getByRole("link", { name: "Özeti aç" }).click();
+    await mgr.page.waitForURL(/onay\/ozet/);
+  });
+  await quality(mgr.page, "gun sonu ozeti");
+  await check("Özet: Kaydet ve kapat locks the day", async () => {
+    await tap(mgr.page.getByRole("button", { name: "Kaydet ve kapat" }));
+    await mgr.page.getByText("Gün kaydedildi").waitFor({ timeout: 10000 });
+    const { error } = await svc.from("cash_counts").update({ online: 1 }).eq("branch_id", depijp.id).eq("work_date", T);
+    expect(error && /kapatıldı/.test(error.message), error?.message ?? "closed day still writable");
+  });
+  await check("Özet: PDF downloads", async () => {
+    const res = await mgr.page.request.get(`${BASE}/de-pijp/onay/ozet/pdf?gun=${T}`);
+    expect(res.status() === 200 && res.headers()["content-type"] === "application/pdf", `${res.status()}`);
+  });
+  await check("Özet: Düzenle reopens the day", async () => {
+    await tap(mgr.page.getByRole("button", { name: "Düzenle" }));
+    await mgr.page.waitForURL(/\/onay\?gun=/);
+    const { data } = await svc.from("day_closings").select("closed").eq("branch_id", depijp.id).eq("work_date", T).single();
+    expect(data?.closed === false, "still closed");
+  });
+  await check("Kapatılan günler lists the day", async () => {
+    await go(mgr.page, "/onay/gecmis");
+    await mgr.page.getByText("Düzenleniyor").first().waitFor({ timeout: 10000 });
+  });
+  await mgr.ctx.close();
+}
+
 // ================= MANAGER: Onay + employee management =================
 {
   const { ctx, page } = await login("yonetici.pijp");
@@ -387,10 +559,11 @@ const yesterday = (() => { const d = new Date(Date.now() - 864e5); return d.toIS
     await form.getByRole("button", { name: "Ekle" }).click();
     await page.getByText("12:00 – 14:00").first().waitFor({ timeout: 10000 });
   });
-  await check("Onay: approve-all leaves nothing pending", async () => {
-    const btn = page.getByRole("button", { name: /kaydı onayla$/ });
-    if (await btn.count()) { await btn.click(); }
-    await page.getByRole("button", { name: "Tümü onaylandı" }).waitFor({ timeout: 10000 });
+  await check("Onay: approve-all leaves nothing waiting for the yönetici", async () => {
+    const btn = page.getByRole("button", { name: /Kasacının onayladığı saatleri onayla/ });
+    if (await btn.count()) await tap(btn);
+    await btn.waitFor({ state: "detached", timeout: 10000 });
+    expect((await page.getByText("Kasacı onayladı", { exact: true }).count()) === 0, "still waiting");
   });
   await go(page, "/calisanlar");
   await check("Çalışanlar lists Test Ahmet", async () => { await page.getByText("test.ahmet").waitFor({ timeout: 10000 }); });

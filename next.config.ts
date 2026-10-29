@@ -4,6 +4,10 @@ const nextConfig: NextConfig = {
   // Every page renders per-user data behind RLS (wages, hours, payments).
   // No framework-level caching (Cache Components / PPR) — each request must
   // hit Supabase fresh under the caller's session. See docs/ARCHITECTURE.md §3.
+  // The day-summary PDF (onay/ozet/pdf) embeds this font for Turkish glyphs.
+  outputFileTracingIncludes: {
+    "/[branch]/onay/ozet/pdf": ["./assets/fonts/Geist-Regular.ttf"],
+  },
   turbopack: {
     rules: {
       "*.css": {

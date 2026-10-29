@@ -18,6 +18,8 @@ import { History } from "lucide-react";
 import { WageCard } from "./wage-card";
 import { PaymentsSection } from "./payments-section";
 import { AccountSection } from "./account-section";
+import { DutiesCard } from "./duties-card";
+import { dutyList } from "@/features/duties/labels";
 
 function initials(fullName: string): string {
   return fullName
@@ -76,6 +78,9 @@ export default async function CalisanProfiliPage({
             {employee.username}
             {employee.startedOn ? ` · başlangıç ${formatDayTR(employee.startedOn)}` : ""}
           </span>
+          {employee.duties.length > 0 ? (
+            <span className="text-sm font-medium text-pz-text">{dutyList(employee.duties)}</span>
+          ) : null}
         </div>
         <StatusChip
           label={employee.active ? "Aktif" : "Pasif"}
@@ -133,6 +138,8 @@ export default async function CalisanProfiliPage({
           </div>
         </div>
       </section>
+
+      <DutiesCard userId={employeeId} branchSlug={branchSlug} duties={employee.duties} />
 
       <WageCard
         userId={employeeId}

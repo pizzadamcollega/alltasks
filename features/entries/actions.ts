@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { toErrorMessage } from "@/lib/errors";
-import { editEntrySchema } from "@/features/entries/validation";
+import { editEntrySchema, finishEntrySchema, startEntrySchema } from "@/features/entries/validation";
 
 export interface EntryActionResult {
   error?: string;
@@ -68,7 +68,10 @@ export async function managerUpdateEntryAction(
   return {};
 }
 
-/** S9 "+ Kayıt ekle": the manager adds an entry the employee forgot to clock. */
+/**
+ * S9 "+ Kayıt ekle": the manager adds an entry the employee forgot to clock.
+ * The manager is the final reviewer, so it goes in approved (D-46).
+ */
 export async function createManualEntryAction(
   branchId: string,
   branchSlug: string,
@@ -87,6 +90,7 @@ export async function createManualEntryAction(
     branch_id: branchId,
     start_at: parsed.data.startAt.toISOString(),
     end_at: parsed.data.endAt.toISOString(),
+    status: "approved",
   });
 
   if (error) return { error: toErrorMessage(error) };
@@ -96,9 +100,68 @@ export async function createManualEntryAction(
 }
 
 /**
- * S2 "Saatleri elle gir": the employee types in a finished shift themselves.
+ * D-46 "Mesaiye başla": opens the caller's entry with only a start time.
+ * The trigger forces `user_id = auth.uid()` and the one-open-entry index
+ * refuses a second running shift.
+ */
+export async function startEntryAction(
+  branchId: string,
+  branchSlug: string,
+  startAt: string,
+): Promise<EntryActionResult> {
+  const parsed = startEntrySchema.safeParse({ startAt });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Geçersiz saat." };
+  }
+
+  const supabase = await createClient();
+  const { data: claims } = await supabase.auth.getClaims();
+  const userId = claims?.claims.sub;
+  if (!userId) return { error: "Oturum bulunamadı, tekrar giriş yap." };
+
+  const { error } = await supabase.from("time_entries").insert({
+    user_id: userId,
+    branch_id: branchId,
+    start_at: parsed.data.startAt.toISOString(),
+  });
+  if (error) {
+    return { error: error.code === "23505" ? "Zaten devam eden bir mesain var." : toErrorMessage(error) };
+  }
+
+  revalidatePath(`/${branchSlug}`);
+  return {};
+}
+
+/** D-46 "Mesaiyi bitir": sets the end; the trigger moves the entry to pending (kasacı onayı). */
+export async function finishEntryAction(
+  entryId: string,
+  branchSlug: string,
+  endAt: string,
+): Promise<EntryActionResult> {
+  const parsed = finishEntrySchema.safeParse({ endAt });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Geçersiz saat." };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("time_entries")
+    .update({ end_at: parsed.data.endAt.toISOString() })
+    .eq("id", entryId)
+    .eq("status", "open")
+    .select("id");
+  if (error) return { error: toErrorMessage(error) };
+  if (!data || data.length === 0) return { error: "Devam eden mesai bulunamadı." };
+
+  revalidatePath(`/${branchSlug}`);
+  revalidatePath(`/${branchSlug}/gecmis`);
+  return {};
+}
+
+/**
+ * S2 "Unuttuğun bir günü ekle": the employee types in a finished shift themselves.
  * The trigger forces `user_id = auth.uid()`, rejects future/overlapping/older
- * than 31 days entries, and stores it as approved + `manual` (D-37).
+ * than 31 days entries, and sends it to the kasacı like any other (D-46, was D-37).
  */
 export async function addOwnEntryAction(
   branchId: string,
@@ -148,7 +211,7 @@ export interface ApproveActionResult {
   approvedCount?: number;
 }
 
-/** S9: bulk-approve every pending entry whose end time is set. */
+/** S9: bulk-approve; `approve_entries` only takes kasacı-approved ones (or the kasacı's own). */
 export async function approveEntriesAction(
   entryIds: string[],
   branchSlug: string,

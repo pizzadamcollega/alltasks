@@ -8,6 +8,7 @@ import { StatusChip } from "@/components/app/status-chip";
 import { formatDuration } from "@/lib/time";
 import { formatEUR } from "@/lib/money";
 import type { EmployeeListRow } from "@/features/accounts/queries";
+import { dutyList } from "@/features/duties/labels";
 
 export function EmployeeList({
   employees,
@@ -50,6 +51,7 @@ export function EmployeeList({
               <span className="truncate text-sm font-semibold text-pz-text">{employee.fullName}</span>
               <span className="text-[13px] text-pz-muted">
                 {employee.username}
+                {employee.duties.length > 0 ? ` · ${dutyList(employee.duties)}` : " · görev yok"}
                 {employee.hourlyRate != null ? ` · ${formatEUR(employee.hourlyRate)} / saat` : ""}
                 {employee.monthMinutes > 0 ? ` · ${formatDuration(employee.monthMinutes)}` : ""}
               </span>

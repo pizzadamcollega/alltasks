@@ -4,7 +4,7 @@
  *   npm run create-user -- --role admin    --username furkan        --name "Furkan Hüner" --password '…'
  *   npm run create-user -- --role patron   --username patron.pijp   --name "…" --password '…' --branches de-pijp
  *   npm run create-user -- --role employee --username ahmet.yilmaz  --name "Ahmet Yılmaz" --password '…' \
- *                          --branches de-pijp,zuid --rate 13.00 --from 2026-11-01
+ *                          --branches de-pijp,zuid --rate 13.00 --from 2026-11-01 --duties bezorgd,usta
  *
  * Reads NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, STAFF_EMAIL_DOMAIN from --env
  * (default .env.local). For production: --env .env.production.local
@@ -25,6 +25,7 @@ const { values } = parseArgs({
     branches: { type: 'string', default: '' },
     rate: { type: 'string' },
     from: { type: 'string' },
+    duties: { type: 'string', default: '' },
   },
 });
 
@@ -56,6 +57,10 @@ if (role === 'employee' && slugs.length === 0) fail('an employee needs at least 
 if (role === 'employee' && !values.rate) fail('an employee needs --rate');
 const rate = values.rate ? Number(values.rate) : null;
 if (rate !== null && !(rate > 0 && rate < 1000)) fail('--rate must be a positive number like 13.00');
+const DUTIES = ['kasaci', 'bezorgd', 'usta'];
+const duties = values.duties!.split(',').map((s) => s.trim()).filter(Boolean);
+if (duties.some((d) => !DUTIES.includes(d))) fail(`--duties must be from ${DUTIES.join(', ')}`);
+if (role === 'employee' && duties.length === 0) fail('an employee needs --duties (e.g. bezorgd)');
 const effectiveFrom = values.from ?? new Date().toISOString().slice(0, 10);
 
 const admin = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
@@ -77,7 +82,7 @@ async function main() {
   const id = created.user.id;
 
   try {
-    const { error: pErr } = await admin.from('profiles').insert({ id, full_name: fullName, username, role });
+    const { error: pErr } = await admin.from('profiles').insert({ id, full_name: fullName, username, role, duties: role === 'employee' ? duties : [] });
     if (pErr) throw pErr;
     if (branches?.length) {
       const { error: mErr } = await admin

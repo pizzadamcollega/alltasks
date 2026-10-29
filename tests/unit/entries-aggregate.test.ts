@@ -14,6 +14,8 @@ function entry(partial: Partial<EntrySummary> & { workDate: string }): EntrySumm
     manual: false,
     hourlyRate: 13,
     amount: 52,
+    cashierApprovedBy: null,
+    returnNote: null,
     ...partial,
   };
 }

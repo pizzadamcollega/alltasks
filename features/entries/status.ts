@@ -1,18 +1,30 @@
 import type { EntryStatus } from "@/types/database";
 import type { StatusTone } from "@/components/app/status-chip";
 
-/** CLAUDE.md glossary: open has no documented UI term, "Devam ediyor" is this app's label for it. */
+/**
+ * CLAUDE.md glossary: open has no documented UI term, "Devam ediyor" is this app's label for it.
+ * D-46: pending → (kasacı) cashier_approved → (yönetici) approved; either can send it back (returned).
+ */
 const LABELS: Record<EntryStatus, string> = {
   open: "Devam ediyor",
   pending: "Bekliyor",
+  cashier_approved: "Kasacı onayladı",
   approved: "Onaylandı",
+  returned: "Geri gönderildi",
 };
 
 const TONES: Record<EntryStatus, StatusTone> = {
   open: "info",
   pending: "warn",
+  cashier_approved: "info",
   approved: "ok",
+  returned: "bad",
 };
+
+/** Employees may still change an entry that no reviewer has signed off yet. */
+export function isEntryEditableByOwner(status: EntryStatus): boolean {
+  return status === "pending" || status === "returned";
+}
 
 export function entryStatusLabel(status: EntryStatus): string {
   return LABELS[status];

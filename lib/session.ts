@@ -1,13 +1,15 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { AppRole } from "@/types/database";
+import type { AppRole, StaffDuty } from "@/types/database";
 
 export interface SessionContext {
   userId: string;
   fullName: string;
   username: string;
   role: AppRole;
+  /** D-45: what an employee does (kasacı / bezorgd / usta); empty for admin and patron. */
+  duties: StaffDuty[];
   theme: "system" | "light" | "dark";
   branch: { id: string; slug: string; name: string };
 }
@@ -33,7 +35,7 @@ export const requireSessionContext = cache(async function requireSessionContext(
   const [{ data: profile }, { data: branch }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("full_name, username, role, theme, active")
+      .select("full_name, username, role, duties, theme, active")
       .eq("id", userId)
       .single(),
     supabase.from("branches").select("id, slug, name").eq("slug", branchSlug).maybeSingle(),
@@ -54,6 +56,7 @@ export const requireSessionContext = cache(async function requireSessionContext(
     fullName: profile.full_name,
     username: profile.username,
     role: profile.role,
+    duties: profile.duties ?? [],
     theme: profile.theme,
     branch,
   };
@@ -61,4 +64,8 @@ export const requireSessionContext = cache(async function requireSessionContext(
 
 export function isManager(role: AppRole): boolean {
   return role === "patron" || role === "admin";
+}
+
+export function hasDuty(ctx: Pick<SessionContext, "duties">, duty: StaffDuty): boolean {
+  return ctx.duties.includes(duty);
 }

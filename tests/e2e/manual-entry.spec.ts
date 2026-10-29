@@ -12,15 +12,18 @@ async function pickTime(page: Page, label: "Başlangıç" | "Bitiş", time: stri
   await expect(sheet).toHaveCount(0);
 }
 
-test.describe("manual entry (no timer, D-38)", () => {
-  test("home has no Başla/Bitir, only the hand-entry form", async ({ page }) => {
+test.describe("hours: start now, finish later (D-46)", () => {
+  test("start, then finish: the entry waits for the kasacı", async ({ page }) => {
     await login(page, "de-pijp", "can");
-    await expect(page.getByRole("button", { name: "Başla" })).toHaveCount(0);
-    await expect(page.getByRole("heading", { name: "Çalıştığım saatler" })).toBeVisible();
+    await page.getByRole("button", { name: "Mesaiye başla" }).click();
+    await expect(page.getByRole("heading", { name: "Mesai devam ediyor" })).toBeVisible();
+    await page.getByRole("button", { name: "Mesaiyi bitir ve onaya gönder" }).click();
+    await expect(page.getByText("kasacı onayına gönderildi")).toBeVisible();
   });
 
-  test("employee types in a past-midnight shift and it is approved straight away", async ({ page }) => {
+  test("a forgotten past-midnight shift goes to approval, not straight to approved", async ({ page }) => {
     await login(page, "de-pijp", "can");
+    await page.getByText("Unuttuğun bir günü ekle").click();
     await page.getByRole("radio", { name: /Dün/ }).click();
     await pickTime(page, "Başlangıç", "17:00");
     await pickTime(page, "Bitiş", "01:30");
@@ -28,10 +31,12 @@ test.describe("manual entry (no timer, D-38)", () => {
     await page.getByRole("button", { name: "Kaydet" }).click();
     await expect(page.getByText("Kayıt eklendi")).toBeVisible();
     await expect(page.getByText("Elle girildi").first()).toBeVisible();
+    await expect(page.getByText("Bekliyor").first()).toBeVisible();
   });
 
   test("an overlapping entry is refused", async ({ page }) => {
     await login(page, "de-pijp", "can");
+    await page.getByText("Unuttuğun bir günü ekle").click();
     await page.getByRole("radio", { name: /Dün/ }).click();
     await pickTime(page, "Başlangıç", "18:00");
     await pickTime(page, "Bitiş", "20:00");

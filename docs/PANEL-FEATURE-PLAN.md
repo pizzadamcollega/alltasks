@@ -47,12 +47,18 @@ See DECISIONS.md D-23 .. D-27 for the exact entries this round added.
 
 | Data / action | Çalışan | Patron/Admin (own branch) | Where |
 | --- | --- | --- | --- |
-| Clock in/out (Başla/Bitir) | ✅ own, server time only | ❌ (patrons don't clock in, D-07) | `/[branch]` → `ClockCard`, `features/clock/*` |
+| Mesaiye başla / Mesaiyi bitir (D-46) | ✅ own, editable time, never in the future | ❌ (patrons don't clock in, D-07) | `/[branch]` → `ClockCard`, `startEntryAction` / `finishEntryAction` |
 | See own hours/earnings (day/week/month) | ✅ | — | `/[branch]`, `/[branch]/gecmis` |
-| Edit own entry's start/end | ✅ while not approved | — | `features/entries/actions.ts#editOwnEntryAction` |
+| Edit own entry's start/end | ✅ while pending or returned (not after kasacı approval) | — | `features/entries/actions.ts#editOwnEntryAction` |
 | See/edit **any** branch entry, incl. approved | ❌ | ✅ | `/[branch]/onay`, `managerUpdateEntryAction` |
 | Add a missed entry for someone | ❌ | ✅ "+ Kayıt ekle" | `createManualEntryAction` |
-| Approve entries (single / bulk) | ❌ | ✅ | `approveEntriesAction`, RPC `approve_entries` |
+| Approve entries (single / bulk) | Kasacı of the day: colleagues' entries → "Kasacı onayladı" (never own) | ✅ after the kasacı (or the kasacı's own entry) — D-47 | `/[branch]/kasa`, `features/review/actions.ts`, RPCs `cashier_approve` / `manager_approve` |
+| Send a record back with a note | Kasacı: pending hours/material of others | ✅ any not-closed record | `return_item` |
+| Set duties (kasacı/bezorgd/usta) | ❌ (never own) | ✅ | `calisanlar/[id]` Görevler card, `setDutiesAction` |
+| Make someone the day's kasacı | ❌ | ✅ (needs the kasacı duty and a shift that day) | `/program` "Kasacı" toggle, `set_day_cashier` |
+| Material list (dough S/M/L ±, note) | Usta: own, today/yesterday, until approved | ✅ approve/return | home `MaterialCard`, `material_reports` |
+| Cash count (açılış, online, kiosk, contant) | Kasacı of the day only | ✅ approve/return | `/[branch]/kasa`, `cash_counts` |
+| Close / reopen a day, summary print/PDF | ❌ | ✅ | `/[branch]/onay/ozet`, `close_day` / `reopen_day` |
 | See own current hourly rate | ✅ (Geçmiş summary only) | ✅ (also sees others') | `features/wages/queries.ts#getCurrentRate` |
 | **Change** a wage | ❌ never | ✅ **except their own** (`user_id <> auth.uid()` in RLS) | `/[branch]/calisanlar/[id]`, `changeWageAction` |
 | See payments/advances | ✅ only records marked visible | ✅ all | `getVisiblePayments` vs `getAllPaymentsForMonth` |
@@ -190,3 +196,15 @@ migration exactly; nothing here is enforced only in the UI (CLAUDE.md golden rul
 - Future weeks are hidden from employees until published (`shifts_select` RLS); current and past weeks always visible. Home pages: published board in the calendar, "henüz yayınlanmadı" notice, employee "Gelecek hafta için gün iste" card, patron "X program isteği onay bekliyor" reminder.
 - DB: `shift_requests`, `shift_week_publications`, RPCs `submit_shift_requests`, `decide_shift_request`, `approve_pending_shift_requests` (migration 20261026000005, applied to prod).
 - Verified: `tests/manual/acceptance.mjs` 98/98 on prod (20 new checks incl. DB-level denials).
+
+## 11. Kasacı / gün sonu round (2026-10-29, D-45..D-49)
+
+- **Profiles**: admin (Furkan), yönetici (patron) and employees with duties kasacı / bezorgd / usta (multi-select, min one). Set on "Yeni çalışan" and on the employee page (Görevler card); listed in Çalışanlar.
+- **Hours**: "Mesaiye başla" then "Mesaiyi bitir ve onaya gönder" (each time editable, pre-filled with now). Forgotten days via "Unuttuğun bir günü ekle". Returned entries show at the top of the home page with the note.
+- **Kasacı** (one per day, "Kasacı" toggle on the program board): `/[branch]/kasa` — approve/return hours and the material list, cash count with live total, older kasacı days that still wait.
+- **Usta**: "Eksik / fazla malzeme" card on the home page.
+- **Yönetici**: Onay shows hours with "Kasacı onayladı · ad", material and cash; once all green → Gün sonu özeti (save + lock, print, Düzenle, PDF) and "Kapatılan günler".
+- DB: migrations 20261029000007 (enum values) + 20261029000008 (everything else) — **written, owner pushes** (`supabase db push` applies them in order; the enum one must commit first).
+- Existing employee accounts have **no duties** until a yönetici ticks them (Görevler card shows a warning); hours entry works without one.
+- Verified locally: lint, typecheck, 70 unit tests, `next build`, the PDF route rendered against prod data (read-only, Turkish glyphs OK), and `npm run test:workflow` — the whole migration chain on PGlite plus 49 role-by-role checks with RLS on. `tests/manual/acceptance.mjs` gained a kasacı → yönetici → gün sonu section; it needs the migrations on prod first.
+- Next round: yönetici "yetki verme" (per-user permissions), to be explained by the owner.

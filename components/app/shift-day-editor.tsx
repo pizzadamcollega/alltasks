@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TimePicker } from "./time-picker";
-import { deleteShiftAction, upsertShiftAction } from "@/features/shifts/actions";
+import { deleteShiftAction, setDayCashierAction, upsertShiftAction } from "@/features/shifts/actions";
+import { cn } from "@/lib/utils";
 import type { ShiftDay } from "@/features/shifts/queries";
 import type { BranchEmployee } from "@/features/branch/queries";
 
@@ -30,6 +31,15 @@ export function ShiftDayEditor({
   const onDay = new Set(day.shifts.map((s) => s.userId));
   const available = employees.filter((e) => !onDay.has(e.userId));
   const lastStart = day.shifts.at(-1)?.startTime ?? DEFAULT_START;
+  const canBeCashier = new Set(employees.filter((e) => e.duties.includes("kasaci")).map((e) => e.userId));
+
+  function toggleCashier(userId: string, name: string, isCashier: boolean) {
+    startTransition(async () => {
+      const result = await setDayCashierAction(branchId, branchSlug, day.date, isCashier ? null : userId);
+      if (result.error) toast.error(result.error);
+      else toast.success(isCashier ? "Kasacı kaldırıldı" : `${name} günün kasacısı`);
+    });
+  }
 
   function save(userId: string, startTime: string, onDone?: () => void) {
     startTransition(async () => {
@@ -67,6 +77,22 @@ export function ShiftDayEditor({
               />
             </div>
             <span className="min-w-0 flex-1 truncate text-sm font-semibold text-pz-text">{shift.fullName}</span>
+            {canBeCashier.has(shift.userId) || shift.isCashier ? (
+              <Button
+                type="button"
+                variant="outline"
+                aria-pressed={shift.isCashier}
+                aria-label={`${shift.fullName} kasacı ${shift.isCashier ? "(seçili)" : "yap"}`}
+                disabled={pending}
+                onClick={() => toggleCashier(shift.userId, shift.fullName, shift.isCashier)}
+                className={cn(
+                  "h-11 shrink-0 px-2 text-xs font-bold",
+                  shift.isCashier ? "border-pz-accent bg-pz-accent-soft text-pz-accent" : "text-pz-muted",
+                )}
+              >
+                {shift.isCashier ? "Kasacı ✓" : "Kasacı"}
+              </Button>
+            ) : null}
             <Button
               type="button"
               variant="ghost"

@@ -5,11 +5,11 @@ import { EntryRow } from "@/components/app/entry-row";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { formatDayTR, formatDuration, formatTimeTR } from "@/lib/time";
 import { formatEUR } from "@/lib/money";
-import { entryEditedNote, entryStatusLabel, entryStatusTone } from "@/features/entries/status";
+import { entryEditedNote, entryStatusLabel, entryStatusTone, isEntryEditableByOwner } from "@/features/entries/status";
 import type { EntrySummary } from "@/features/entries/queries";
 import { EditEntryForm } from "./edit-entry-form";
 
-/** S5: tapping a not-yet-approved entry opens the edit sheet (SCREENS.md S2/S5). */
+/** S5: tapping an entry no reviewer signed off yet opens the edit sheet; saving resends it (D-46). */
 export function EditableEntryRow({
   entry,
   branchSlug,
@@ -18,7 +18,7 @@ export function EditableEntryRow({
   branchSlug: string;
 }) {
   const [open, setOpen] = useState(false);
-  const editable = entry.status !== "approved" && entry.endAt !== null;
+  const editable = isEntryEditableByOwner(entry.status) && entry.endAt !== null;
 
   const row = (
     <EntryRow
@@ -27,7 +27,7 @@ export function EditableEntryRow({
       duration={entry.roundedMinutes != null ? formatDuration(entry.roundedMinutes) : "Devam ediyor"}
       amount={entry.amount != null ? formatEUR(entry.amount) : undefined}
       status={{ label: entryStatusLabel(entry.status), tone: entryStatusTone(entry.status) }}
-      editedNote={entryEditedNote(entry)}
+      editedNote={entry.status === "returned" && entry.returnNote ? `Not: ${entry.returnNote}` : entryEditedNote(entry)}
       onClick={editable ? () => setOpen(true) : undefined}
     />
   );

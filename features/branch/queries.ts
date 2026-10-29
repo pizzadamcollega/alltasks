@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, EntryStatus } from "@/types/database";
+import type { Database, EntryStatus, StaffDuty } from "@/types/database";
 
 type Client = SupabaseClient<Database>;
 
@@ -75,6 +75,7 @@ export async function getMonthlyBranchCost(
 export interface BranchEmployee {
   userId: string;
   fullName: string;
+  duties: StaffDuty[];
 }
 
 /** Active employees (not patron/admin) belonging to this branch, for pickers and lists. */
@@ -89,13 +90,13 @@ export async function getBranchEmployees(supabase: Client, branchId: string): Pr
 
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, full_name")
+    .select("id, full_name, duties")
     .in("id", userIds)
     .eq("role", "employee")
     .eq("active", true)
     .order("full_name", { ascending: true });
 
-  return (profiles ?? []).map((p) => ({ userId: p.id, fullName: p.full_name }));
+  return (profiles ?? []).map((p) => ({ userId: p.id, fullName: p.full_name, duties: p.duties ?? [] }));
 }
 
 export interface TodayStaffRow {

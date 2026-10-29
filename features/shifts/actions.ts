@@ -47,6 +47,28 @@ export async function upsertShiftAction(
   return {};
 }
 
+/** D-48: make someone on the day the kasacı (null = nobody). `set_day_cashier` checks rights and duty. */
+export async function setDayCashierAction(
+  branchId: string,
+  branchSlug: string,
+  workDate: string,
+  userId: string | null,
+): Promise<ShiftActionResult> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(workDate)) return { error: "Geçersiz gün." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_day_cashier", {
+    p_branch: branchId,
+    p_date: workDate,
+    p_user: userId,
+  });
+  if (error) return { error: toErrorMessage(error) };
+
+  revalidateBoard(branchSlug);
+  revalidatePath(`/${branchSlug}`, "layout");
+  return {};
+}
+
 export async function deleteShiftAction(
   shiftId: string,
   branchSlug: string,

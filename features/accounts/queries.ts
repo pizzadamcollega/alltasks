@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { AppRole, Database } from "@/types/database";
+import type { AppRole, Database, StaffDuty } from "@/types/database";
 
 type Client = SupabaseClient<Database>;
 
@@ -8,6 +8,7 @@ export interface EmployeeListRow {
   fullName: string;
   username: string;
   active: boolean;
+  duties: StaffDuty[];
   hourlyRate: number | null;
   monthMinutes: number;
 }
@@ -28,7 +29,7 @@ export async function getEmployeeList(
 
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, full_name, username, active, role")
+    .select("id, full_name, username, active, role, duties")
     .in("id", memberIds)
     .eq("role", "employee")
     .order("full_name", { ascending: true });
@@ -64,6 +65,7 @@ export async function getEmployeeList(
     fullName: employee.full_name,
     username: employee.username,
     active: employee.active,
+    duties: employee.duties ?? [],
     hourlyRate: latestRateByUser.get(employee.id)?.rate ?? null,
     monthMinutes: minutesByUser.get(employee.id) ?? 0,
   }));
@@ -76,6 +78,7 @@ export interface EmployeeProfile {
   active: boolean;
   startedOn: string | null;
   role: AppRole;
+  duties: StaffDuty[];
 }
 
 export async function getEmployeeProfile(
@@ -84,7 +87,7 @@ export async function getEmployeeProfile(
 ): Promise<EmployeeProfile | null> {
   const { data } = await supabase
     .from("profiles")
-    .select("id, full_name, username, active, started_on, role")
+    .select("id, full_name, username, active, started_on, role, duties")
     .eq("id", userId)
     .maybeSingle();
 
@@ -96,6 +99,7 @@ export async function getEmployeeProfile(
     active: data.active,
     startedOn: data.started_on,
     role: data.role,
+    duties: data.duties ?? [],
   };
 }
 

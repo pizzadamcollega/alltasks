@@ -127,6 +127,11 @@ export function WeekCalendar({
                           {shift.fullName}
                           {isMe ? " (sen)" : ""}
                         </span>
+                        {shift.isCashier ? (
+                          <span className="rounded-chip bg-pz-accent-soft px-1.5 py-px text-[11px] font-bold text-pz-accent">
+                            Kasacı
+                          </span>
+                        ) : null}
                       </li>
                     );
                   })}

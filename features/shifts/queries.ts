@@ -10,6 +10,8 @@ export interface ShiftRow {
   fullName: string;
   /** "HH:mm" */
   startTime: string;
+  /** D-48: this person is the day's kasacı. */
+  isCashier: boolean;
 }
 
 export interface ShiftDay {
@@ -25,7 +27,7 @@ export async function getWeekShifts(
 ): Promise<ShiftDay[]> {
   const { data } = await supabase
     .from("shifts")
-    .select("id, user_id, work_date, start_time")
+    .select("id, user_id, work_date, start_time, is_cashier")
     .eq("branch_id", branchId)
     .gte("work_date", monday)
     .lte("work_date", addDaysToDate(monday, 6));
@@ -46,9 +48,75 @@ export async function getWeekShifts(
         userId: row.user_id,
         fullName: nameById.get(row.user_id) ?? "—",
         startTime: row.start_time.slice(0, 5),
+        isCashier: row.is_cashier,
       }))
       .sort((a, b) => a.startTime.localeCompare(b.startTime) || a.fullName.localeCompare(b.fullName, "tr")),
   }));
+}
+
+/** D-48: who is the kasacı on this day (flag on the board), if anyone. */
+export async function getDayCashier(
+  supabase: Client,
+  branchId: string,
+  workDate: string,
+): Promise<{ userId: string; fullName: string } | null> {
+  const { data } = await supabase
+    .from("shifts")
+    .select("user_id")
+    .eq("branch_id", branchId)
+    .eq("work_date", workDate)
+    .eq("is_cashier", true)
+    .maybeSingle();
+  if (!data) return null;
+  const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", data.user_id).maybeSingle();
+  return { userId: data.user_id, fullName: profile?.full_name ?? "—" };
+}
+
+/**
+ * D-48: recent days (newest first) on which this person was the kasacı, with
+ * how many hours/material entries still wait for them — a forgotten day
+ * entered later must still reach its kasacı.
+ */
+export async function getMyCashierDays(
+  supabase: Client,
+  branchId: string,
+  userId: string,
+  fromDate: string,
+  toDate: string,
+): Promise<{ date: string; waiting: number }[]> {
+  const { data: shifts } = await supabase
+    .from("shifts")
+    .select("work_date")
+    .eq("branch_id", branchId)
+    .eq("user_id", userId)
+    .eq("is_cashier", true)
+    .gte("work_date", fromDate)
+    .lte("work_date", toDate)
+    .order("work_date", { ascending: false });
+  const dates = (shifts ?? []).map((s) => s.work_date);
+  if (dates.length === 0) return [];
+
+  const [{ data: entries }, { data: materials }] = await Promise.all([
+    supabase
+      .from("time_entries")
+      .select("work_date")
+      .eq("branch_id", branchId)
+      .eq("status", "pending")
+      .neq("user_id", userId)
+      .in("work_date", dates),
+    supabase
+      .from("material_reports")
+      .select("work_date")
+      .eq("branch_id", branchId)
+      .eq("status", "pending")
+      .neq("user_id", userId)
+      .in("work_date", dates),
+  ]);
+  const waiting = new Map<string, number>();
+  for (const row of [...(entries ?? []), ...(materials ?? [])]) {
+    waiting.set(row.work_date, (waiting.get(row.work_date) ?? 0) + 1);
+  }
+  return dates.map((date) => ({ date, waiting: waiting.get(date) ?? 0 }));
 }
 
 /** When a future week's board was made visible to employees; null while it is still a draft. */

@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Home, CheckSquare, Users, History } from "lucide-react";
+import { CalendarDays, Home, CheckSquare, Users, History, Wallet } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { AppRole } from "@/types/database";
+import type { AppRole, StaffDuty } from "@/types/database";
 
 interface NavItem {
   href: string;
@@ -20,10 +20,12 @@ interface NavItem {
  * Ayarlar/Bildirimler are docs/ROADMAP.md Phase 6-11 — adding nav links to
  * them now would be dead ends. Expand this list as those phases land.
  */
-function navItemsFor(role: AppRole, branch: string): NavItem[] {
+function navItemsFor(role: AppRole, duties: StaffDuty[], branch: string): NavItem[] {
   if (role === "employee") {
     return [
       { href: `/${branch}`, label: "Ana sayfa", icon: Home },
+      // D-48: the kasa screen itself says when you are not today's kasacı
+      ...(duties.includes("kasaci") ? [{ href: `/${branch}/kasa`, label: "Kasa", icon: Wallet }] : []),
       { href: `/${branch}/program`, label: "Haftalık program", shortLabel: "Program", icon: CalendarDays },
       { href: `/${branch}/gecmis`, label: "Geçmiş", icon: History },
     ];
@@ -36,9 +38,9 @@ function navItemsFor(role: AppRole, branch: string): NavItem[] {
   ];
 }
 
-function useActiveItems(role: AppRole, branch: string) {
+function useActiveItems(role: AppRole, duties: StaffDuty[], branch: string) {
   const pathname = usePathname();
-  const items = navItemsFor(role, branch);
+  const items = navItemsFor(role, duties, branch);
   return items.map((item) => ({
     ...item,
     active: item.href === `/${branch}` ? pathname === item.href : pathname.startsWith(item.href),
@@ -46,13 +48,13 @@ function useActiveItems(role: AppRole, branch: string) {
 }
 
 /** Bottom tab bar on mobile — hidden at the desktop breakpoint (DESIGN.md §3). */
-export function BottomNav({ role, branch }: { role: AppRole; branch: string }) {
-  const items = useActiveItems(role, branch);
+export function BottomNav({ role, duties, branch }: { role: AppRole; duties: StaffDuty[]; branch: string }) {
+  const items = useActiveItems(role, duties, branch);
 
   return (
     <nav
       aria-label="Ana gezinme"
-      className="fixed inset-x-0 bottom-0 z-20 grid border-t border-pz-border bg-pz-surface px-2 pb-[max(14px,env(safe-area-inset-bottom))] pt-1.5 lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-20 grid print:hidden border-t border-pz-border bg-pz-surface px-2 pb-[max(14px,env(safe-area-inset-bottom))] pt-1.5 lg:hidden"
       style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
     >
       {items.map(({ href, label, shortLabel, icon: Icon, active }) => (
@@ -74,13 +76,13 @@ export function BottomNav({ role, branch }: { role: AppRole; branch: string }) {
 }
 
 /** Left sidebar at ≥1024px — replaces the bottom nav (DESIGN.md §3). */
-export function SidebarNav({ role, branch }: { role: AppRole; branch: string }) {
-  const items = useActiveItems(role, branch);
+export function SidebarNav({ role, duties, branch }: { role: AppRole; duties: StaffDuty[]; branch: string }) {
+  const items = useActiveItems(role, duties, branch);
 
   return (
     <nav
       aria-label="Ana gezinme"
-      className="hidden w-56 shrink-0 flex-col gap-1 border-r border-pz-border bg-pz-surface p-4 lg:flex"
+      className="hidden w-56 shrink-0 flex-col gap-1 border-r border-pz-border bg-pz-surface p-4 lg:flex print:!hidden"
     >
       {items.map(({ href, label, icon: Icon, active }) => (
         <Link

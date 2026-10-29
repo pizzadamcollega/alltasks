@@ -28,7 +28,7 @@ export function AppHeader({
   role: AppRole;
 }) {
   return (
-    <header className="flex items-center justify-between gap-1 px-4 pt-3 lg:px-6">
+    <header className="flex items-center justify-between gap-1 px-4 pt-3 print:hidden lg:px-6">
       {role === "admin" ? <BranchSwitcher currentSlug={branch} /> : <span />}
       <div className="flex items-center gap-1">
         <ThemeToggle />

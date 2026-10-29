@@ -1,5 +1,5 @@
 /**
- * Hand-authored from supabase/migrations/*.sql (init + 20261026000003 shifts/manual), covering only
+ * Hand-authored from supabase/migrations/*.sql (init through 20261029000008 day close), covering only
  * the tables/views/functions this phase's screens touch (S1/S2/S5/S6/S8/S9/S12-14).
  * `Relationships: []` is required boilerplate so these tables structurally
  * match postgrest-js's `GenericTable`/`GenericView` (real codegen always
@@ -11,7 +11,10 @@
  */
 
 export type AppRole = "admin" | "patron" | "employee";
-export type EntryStatus = "open" | "pending" | "approved";
+export type EntryStatus = "open" | "pending" | "cashier_approved" | "approved" | "returned";
+export type ReviewStatus = "pending" | "cashier_approved" | "approved" | "returned";
+export type StaffDuty = "kasaci" | "bezorgd" | "usta";
+export type ReviewKind = "entry" | "material" | "cash";
 export type PaymentKind = "payment" | "advance";
 export type ThemePref = "system" | "light" | "dark";
 export type ShiftRequestStatus = "pending" | "approved" | "rejected";
@@ -46,6 +49,7 @@ export interface Database {
           theme: ThemePref;
           active: boolean;
           started_on: string | null;
+          duties: StaffDuty[];
           created_at: string;
           updated_at: string;
         };
@@ -97,6 +101,11 @@ export interface Database {
           approved_by: string | null;
           approved_at: string | null;
           manual: boolean;
+          cashier_approved_by: string | null;
+          cashier_approved_at: string | null;
+          returned_by: string | null;
+          returned_at: string | null;
+          return_note: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -114,6 +123,7 @@ export interface Database {
           user_id: string;
           work_date: string;
           start_time: string;
+          is_cashier: boolean;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -124,6 +134,7 @@ export interface Database {
           user_id: string;
           work_date: string;
           start_time: string;
+          is_cashier?: boolean;
         };
         Update: Partial<Database["public"]["Tables"]["shifts"]["Row"]>;
         Relationships: [];
@@ -154,6 +165,90 @@ export interface Database {
           published_at: string;
         };
         Insert: { branch_id: string; week_start: string };
+        Update: never;
+        Relationships: [];
+      };
+      material_reports: {
+        Row: {
+          id: string;
+          branch_id: string;
+          user_id: string;
+          work_date: string;
+          dough_s: number;
+          dough_m: number;
+          dough_l: number;
+          note: string | null;
+          status: ReviewStatus;
+          cashier_approved_by: string | null;
+          cashier_approved_at: string | null;
+          approved_by: string | null;
+          approved_at: string | null;
+          returned_by: string | null;
+          returned_at: string | null;
+          return_note: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          branch_id: string;
+          user_id: string;
+          work_date: string;
+          dough_s?: number;
+          dough_m?: number;
+          dough_l?: number;
+          note?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["material_reports"]["Insert"]>;
+        Relationships: [];
+      };
+      cash_counts: {
+        Row: {
+          id: string;
+          branch_id: string;
+          user_id: string | null;
+          work_date: string;
+          opening_float: number;
+          online: number;
+          kiosk: number;
+          contant: number;
+          total: number;
+          note: string | null;
+          status: ReviewStatus;
+          approved_by: string | null;
+          approved_at: string | null;
+          returned_by: string | null;
+          returned_at: string | null;
+          return_note: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          branch_id: string;
+          user_id?: string | null;
+          work_date: string;
+          opening_float?: number;
+          online?: number;
+          kiosk?: number;
+          contant?: number;
+          note?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["cash_counts"]["Insert"]>;
+        Relationships: [];
+      };
+      day_closings: {
+        Row: {
+          branch_id: string;
+          work_date: string;
+          closed: boolean;
+          closed_by: string | null;
+          closed_at: string;
+          reopened_by: string | null;
+          reopened_at: string | null;
+          snapshot: Record<string, unknown>;
+        };
+        Insert: never;
         Update: never;
         Relationships: [];
       };
@@ -200,6 +295,10 @@ export interface Database {
           hourly_rate: number | null;
           amount: number | null;
           manual: boolean;
+          cashier_approved_by: string | null;
+          cashier_approved_at: string | null;
+          returned_at: string | null;
+          return_note: string | null;
         };
         Relationships: [];
       };
@@ -267,10 +366,44 @@ export interface Database {
         Args: { p_branch: string; p_week: string };
         Returns: number;
       };
+      set_day_cashier: {
+        Args: { p_branch: string; p_date: string; p_user: string | null };
+        Returns: undefined;
+      };
+      is_day_cashier: {
+        Args: { p_branch: string; p_date: string };
+        Returns: boolean;
+      };
+      business_today: {
+        Args: { p_branch: string };
+        Returns: string;
+      };
+      cashier_approve: {
+        Args: { p_kind: ReviewKind; p_ids: string[] };
+        Returns: number;
+      };
+      manager_approve: {
+        Args: { p_kind: ReviewKind; p_ids: string[] };
+        Returns: number;
+      };
+      return_item: {
+        Args: { p_kind: ReviewKind; p_id: string; p_note: string };
+        Returns: undefined;
+      };
+      close_day: {
+        Args: { p_branch: string; p_date: string };
+        Returns: Database["public"]["Tables"]["day_closings"]["Row"];
+      };
+      reopen_day: {
+        Args: { p_branch: string; p_date: string };
+        Returns: undefined;
+      };
     };
     Enums: {
       app_role: AppRole;
       entry_status: EntryStatus;
+      review_status: ReviewStatus;
+      staff_duty: StaffDuty;
       payment_kind: PaymentKind;
       theme_pref: ThemePref;
     };

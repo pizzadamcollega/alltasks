@@ -14,7 +14,7 @@ export default async function AppLayout({
 
   return (
     <div className="flex min-h-screen bg-pz-bg">
-      <SidebarNav role={session.role} branch={session.branch.slug} />
+      <SidebarNav role={session.role} duties={session.duties} branch={session.branch.slug} />
       {/* min-w-0: lets wide children (e.g. the day-chip strip) scroll instead of widening the page */}
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <AppHeader branch={session.branch.slug} fullName={session.fullName} role={session.role} />
@@ -22,7 +22,7 @@ export default async function AppLayout({
           <div className="mx-auto w-full max-w-[960px]">{children}</div>
         </main>
       </div>
-      <BottomNav role={session.role} branch={session.branch.slug} />
+      <BottomNav role={session.role} duties={session.duties} branch={session.branch.slug} />
     </div>
   );
 }

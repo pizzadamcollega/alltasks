@@ -1,0 +1,3 @@
+Geist-Regular.ttf — Geist by Vercel (https://github.com/vercel/geist-font),
+licensed under the SIL Open Font License 1.1 (https://openfontlicense.org).
+Copied from next/dist/compiled/@vercel/og/ so the day-summary PDF can render Turkish text.
