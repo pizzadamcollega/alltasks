@@ -7,7 +7,7 @@ payments/advances, monthly reports with Excel/PDF export.
 
 **UI language is Turkish only.** Code, comments, commit messages and docs are English.
 
-## Current status (2026-10-27) — read this before doing anything
+## Current status (2026-10-30) — read this before doing anything
 
 The app is **built and live**, not just specced. Full detail, scope decisions and the open-item
 list are in **`docs/PANEL-FEATURE-PLAN.md` — read that file second, right after this one.**
@@ -20,7 +20,7 @@ list are in **`docs/PANEL-FEATURE-PLAN.md` — read that file second, right afte
   Hand-entered hours are **no longer auto-approved** (D-46 supersedes D-37). Phase 6's request/draft/publish flow, swaps, leave, notifications,
   Raporlar/export, Ayarlar and PWA are **not built**. See PANEL-FEATURE-PLAN §8.
 - **Supabase**: real project `sfpjvslasvzigpyfftyf` (**eu-central-1**, Frankfurt — moved from
-  Seoul `fgpjzqybsijlasuoklen` on 2026-10-26, D-40), migrations through 20261026000005 + seed applied (20261027000006 actor-FK `set null`, D-44, and 20261029000007/000008 day-close workflow, D-45..D-49, written — owner pushes), linked locally
+  Seoul `fgpjzqybsijlasuoklen` on 2026-10-26, D-40), migrations through 20261026000005 + seed applied (20261027000006 actor-FK `set null`, D-44, and 20261029000007/000008 day-close workflow, D-45..D-49 — all applied 2026-10-29; Vercel auto-deploys on push to `main`; open items in PANEL-FEATURE-PLAN "Open after go-live"), linked locally
   (`supabase link`). Vercel functions pinned to `fra1` (`vercel.json`). Staff e-mail domain `staff.pizzadam.invalid` confirmed working (D-28). Live accounts
   (2026-10-26, D-33..D-35): admin `furkan`; yöneticiler `yonetici.pijp` / `yonetici.zuid`; test
   çalışanlar `test.ahmet` / `test.murat`. Passwords live **only** in the owner's local `.env.local`

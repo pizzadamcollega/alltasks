@@ -204,7 +204,19 @@ migration exactly; nothing here is enforced only in the UI (CLAUDE.md golden rul
 - **Kasacı** (one per day, "Kasacı" toggle on the program board): `/[branch]/kasa` — approve/return hours and the material list, cash count with live total, older kasacı days that still wait.
 - **Usta**: "Eksik / fazla malzeme" card on the home page.
 - **Yönetici**: Onay shows hours with "Kasacı onayladı · ad", material and cash; once all green → Gün sonu özeti (save + lock, print, Düzenle, PDF) and "Kapatılan günler".
-- DB: migrations 20261029000007 (enum values) + 20261029000008 (everything else) — **written, owner pushes** (`supabase db push` applies them in order; the enum one must commit first).
+- DB: migrations 20261027000006, 20261029000007 (enum values) + 20261029000008 (everything else) — **applied to prod 2026-10-29**. Code live (`893932c`); Vercel auto-deploys on push to `main`.
 - Existing employee accounts have **no duties** until a yönetici ticks them (Görevler card shows a warning); hours entry works without one.
 - Verified locally: lint, typecheck, 70 unit tests, `next build`, the PDF route rendered against prod data (read-only, Turkish glyphs OK), and `npm run test:workflow` — the whole migration chain on PGlite plus 49 role-by-role checks with RLS on. `tests/manual/acceptance.mjs` gained a kasacı → yönetici → gün sonu section; it needs the migrations on prod first.
 - Next round: yönetici "yetki verme" (per-user permissions), to be explained by the owner.
+
+### Open after go-live (2026-10-30)
+- Duties were assigned by the owner (e.g. `ali.delioglu` = kasacı). The day's kasacı still needs the
+  **"Kasacı yap"** toggle on the program board (the old grey "Kasacı" toggle looked like a label —
+  relabelled in `893932c`). As of the last check no shift had `is_cashier = true`.
+- The kasacı → yönetici → gün sonu flow is **not yet verified on prod**: the first prod acceptance run
+  (117/131) failed the kasacı/Özet section, possibly because the deploy was still rolling out; a rerun
+  was blocked. Rerun `node tests/manual/acceptance.mjs https://alltasks-mauve.vercel.app` first.
+- axe colour-contrast failure on the usta home (`MaterialCard` submit button, `.bg-primary`) — fix.
+- Employees can now page the program back 8 weeks (`PAST_WEEKS`) and forward 8 (requests).
+- Plan item not built: patron-home "Bugün onay bekleyen" counter.
+
